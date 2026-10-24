@@ -21,6 +21,11 @@ doc_events = {
         "after_insert": "ns.events.employee.after_insert",
         "on_update": "ns.events.employee.on_update",
     },
+    # P1 (§7): tính lại SalaryDay phía server. Hàm chỉ chạy khi site_config
+    # có ns_tinh_lai_salaryday = 1 (bật sau khi `ns.salaryday.doi_chieu` lệch = 0).
+    "SalaryDay": {
+        "validate": "ns.salaryday.validate_hook",
+    },
 }
 
 # ═══ Fixtures ═══
