@@ -1,0 +1,165 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-10-24 08:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "ngay",
+  "loai",
+  "column_break_loai",
+  "tieu_de",
+  "nguon",
+  "khoa_tu_dong",
+  "section_noi_dung",
+  "noi_dung",
+  "gia_tri_cu",
+  "gia_tri_moi",
+  "tep"
+ ],
+ "fields": [
+  {
+   "default": "NSSK-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "NSSK-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Nhân viên",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Tên",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ngay",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Ngày",
+   "reqd": 1
+  },
+  {
+   "fieldname": "loai",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Loại",
+   "options": "Vào làm\nKý HĐLĐ\nPhụ lục HĐLĐ\nThay đổi lương\nĐiều chuyển bộ phậ3n\nBắt đầu đóng BHXH\nNgẻng đóng BHXH\nKhen thưởng\nKỷ luậ3t\nKhám sức khỏe\nTậ3p huấn ATTP\nTạm nghỉ\nĐi làm lại\nNghỉ việc\nKhác",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_loai",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tieu_de",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tiêu đề"
+  },
+  {
+   "default": "Tay",
+   "fieldname": "nguon",
+   "fieldtype": "Select",
+   "label": "Nguồn",
+   "options": "Tay\nTự động",
+   "read_only": 1
+  },
+  {
+   "fieldname": "khoa_tu_dong",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Khoá tự động",
+   "unique": 1
+  },
+  {
+   "fieldname": "section_noi_dung",
+   "fieldtype": "Section Break",
+   "label": "Nội dung"
+  },
+  {
+   "fieldname": "noi_dung",
+   "fieldtype": "Small Text",
+   "label": "Nội dung"
+  },
+  {
+   "fieldname": "gia_tri_cu",
+   "fieldtype": "Data",
+   "label": "Giá trị cũ"
+  },
+  {
+   "fieldname": "gia_tri_moi",
+   "fieldtype": "Data",
+   "label": "Giá trị mới"
+  },
+  {
+   "fieldname": "tep",
+   "fieldtype": "Attach",
+   "label": "Tệp"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-24 08:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NS",
+ "name": "NS Su Kien",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "employee_name,loai,tieu_de",
+ "sort_field": "ngay",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "tieu_de",
+ "track_changes": 1
+}
