@@ -1,0 +1,67 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block head_include %}
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/ns/ns/shell.css?v={{ asset_version }}">
+{# Luật vàng #1: import map remap mọi shared module sang URL có ?v= (static import bỏ query) #}
+<script type="importmap">
+{ "imports": {
+  "/assets/ns/ns/lib/api.js":           "/assets/ns/ns/lib/api.js?v={{ asset_version }}",
+  "/assets/ns/ns/lib/router.js":        "/assets/ns/ns/lib/router.js?v={{ asset_version }}",
+  "/assets/ns/ns/lib/dom.js":           "/assets/ns/ns/lib/dom.js?v={{ asset_version }}",
+  "/assets/ns/ns/lib/format.js":        "/assets/ns/ns/lib/format.js?v={{ asset_version }}",
+  "/assets/ns/ns/lib/store.js":         "/assets/ns/ns/lib/store.js?v={{ asset_version }}",
+  "/assets/ns/ns/components/toast.js":  "/assets/ns/ns/components/toast.js?v={{ asset_version }}",
+  "/assets/ns/ns/components/modal.js":  "/assets/ns/ns/components/modal.js?v={{ asset_version }}",
+  "/assets/ns/ns/components/table.js":  "/assets/ns/ns/components/table.js?v={{ asset_version }}",
+  "/assets/ns/ns/components/field.js":  "/assets/ns/ns/components/field.js?v={{ asset_version }}",
+  "/assets/ns/ns/components/canh_bao.js": "/assets/ns/ns/components/canh_bao.js?v={{ asset_version }}"
+}}
+</script>
+<script>
+window.NS_CONTEXT = {{ ns_context | tojson }};
+</script>
+{% endblock %}
+
+{% block page_content %}
+<div id="ns-app" class="ns-app">
+  {% if not co_quyen %}
+  <div class="ns-main">
+    <div class="ns-empty" style="padding-top:4rem">
+      <div class="ns-empty-icon">🔒</div>
+      <div class="ns-empty-title">Không có quyền</div>
+      <div>Tài khoản <b>{{ frappe.session.user }}</b> chưa có vai trò HR User / HR Manager.<br>Liên hệ quản trị để được cấp quyền.</div>
+      <div class="ns-mt-3"><a class="ns-link" href="/app">Về ERPNext</a> · <a class="ns-link" href="/?cmd=web_logout">Đăng xuất</a></div>
+    </div>
+  </div>
+  {% else %}
+  <header class="ns-header"><div class="ns-header-inner" id="ns-header"></div></header>
+  <main class="ns-main" id="ns-view"><div class="ns-skeleton" style="height:200px"></div></main>
+  <nav class="ns-bottom-nav" id="ns-nav"></nav>
+  <div id="ns-toast-mount" class="ns-toast-mount"></div>
+  <div id="ns-modal-mount" class="ns-modal-mount" role="dialog" aria-modal="true"></div>
+  <div id="ns-loading-mount" class="ns-loading-mount" hidden><div class="ns-loading-spinner"></div><div class="ns-loading-text">Đang xử lý…</div></div>
+  <script type="module" src="/assets/ns/ns/shell.js?v={{ asset_version }}"></script>
+  <script>
+  // Luật vàng #2 — handshake build: shell cũ do cache → banner đỏ thay vì hỏng ngầm
+  window.addEventListener('load', function () { setTimeout(function () {
+    var expected = {{ shell_build | tojson }};
+    var got = window.NS_APP && window.NS_APP.build;
+    if (got === expected) return;
+    console.error('[NS] shell build lệch: got=' + got + ' expected=' + expected);
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px 14px;font:600 14px Inter,sans-serif;text-align:center';
+    d.innerHTML = 'Giao diện đang chạy bản CŨ do cache (' + got + ' ≠ ' + expected + '). Nhấn Ctrl+Shift+R hoặc <a style="color:#fff;text-decoration:underline" href="/ns?r=' + Date.now() + '">tải lại</a>.';
+    document.body.appendChild(d);
+  }, 3000); });
+  </script>
+  {% endif %}
+</div>
+{% endblock %}
