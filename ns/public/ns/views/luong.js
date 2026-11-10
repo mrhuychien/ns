@@ -5,6 +5,24 @@ import { escapeHtml, formatNumber } from '../lib/format.js';
 import { replaceQuery } from '../lib/router.js';
 import { showToast, withLoading } from '../components/toast.js';
 import { paged } from '../components/table.js';
+import { showModal } from '../components/modal.js';
+import { phieuLuongHtml } from '../components/phieu_luong.js';
+
+const DT = { nhat: 'SalaryDay', khoan: 'SX Phieu Luong' };
+
+/** Bấm "Xem" một dòng → phiếu lương đầy đủ (các khoản, sản phẩm, từng ngày) trong modal — như thẻ Phiếu lương sx. */
+async function moPhieu(loai, name, nut) {
+    let p;
+    try { p = await withLoading(() => ns.phieuLuong.xem(DT[loai], name), 'Đang mở phiếu…'); } catch (e) { showToast(e.message, 'error'); return; }
+    const deskUrl = `/app/${loai === 'nhat' ? 'salaryday' : 'sx-phieu-luong'}/${encodeURIComponent(p.name)}`;
+    showModal({
+        title: `${p.ten} · T${p.thang}/${p.nam}`,
+        body: phieuLuongHtml(p, { hienTen: true }),
+        footer: `${loai === 'nhat' ? `<a class="ns-btn" href="/printview?doctype=SalaryDay&name=${encodeURIComponent(p.name)}&format=${encodeURIComponent('Phiếu lương công nhật')}" target="_blank">🖨️ In</a>` : ''}
+            <a class="ns-btn" href="${escapeHtml(deskUrl)}" target="_blank">Mở trong ERPNext để sửa / duyệt</a><button class="ns-btn ns-btn-primary" data-ns-close>Đóng</button>`,
+    });
+    if (nut) nut.blur();
+}
 
 const CTX = window.NS_CONTEXT || {};
 const SO = new Set(['ngaysanxuat', 'congngay', 'lamthem', 'luongngaycong', 'luonglamthem', 'anca', 'chuyencan', 'hotrongaycong', 'hotro', 'thuongkhac', 'thuongthamnien', 'tongtien', 'baohiem', 'tienphat', 'tongkhautru', 'luongthucnhan', 'luongck',
@@ -24,7 +42,7 @@ export async function render({ container, query = {}, setHeader }) {
         <div class="ns-filters">
             <select class="ns-input" id="l-bp"><option value="">Mọi bộ phận</option>${raw((CTX.departments || []).map((d) => `<option value="${escapeHtml(d)}" ${st.bp === d ? 'selected' : ''}>${escapeHtml(bpLabel(d))}</option>`).join(''))}</select>
             <select class="ns-input" id="l-tt"><option value="">Mọi trạng thái</option><option value="duyet" ${st.tt === 'duyet' ? 'selected' : ''}>Đã duyệt</option><option value="nhap" ${st.tt === 'nhap' ? 'selected' : ''}>Nháp</option><option value="thieu" ${st.tt === 'thieu' ? 'selected' : ''}>Thiếu phiếu</option><option value="trung" ${st.tt === 'trung' ? 'selected' : ''}>Trùng</option></select>
-            <div class="ns-actions"><button class="ns-btn ns-btn-sm" id="l-xlsx">⬇️ Xuất Excel</button><button class="ns-btn ns-btn-sm" id="l-ck" ${st.loai === 'nhat' ? '' : 'hidden'}>🏦 Danh sách chuyển khoản</button></div>
+            <div class="ns-actions"><button class="ns-btn ns-btn-sm" id="l-xlsx">⬇️ Xuất Excel</button><button class="ns-btn ns-btn-sm" id="l-ck" ${st.loai === 'nhat' ? '' : 'hidden'}>🏦 Danh sách chuyển khoản</button><a class="ns-btn ns-btn-sm" href="#/tai-khoan">🔑 Tài khoản xem lương</a></div>
         </div>
         <div id="l-kpi"></div>
         <div id="l-body">${raw(skeleton(300))}</div>
@@ -67,9 +85,11 @@ export async function render({ container, query = {}, setHeader }) {
                 <td>${escapeHtml(r.department || '—')}</td>
                 <td>${r.thieu_phieu ? '<span class="ns-badge ns-badge-danger">Thiếu phiếu</span>' : `<span class="ns-badge ${r.docstatus === 1 ? 'ns-badge-success' : 'ns-badge-warning'}">${r.docstatus === 1 ? 'Đã duyệt' : 'Nháp'}</span>${r.trung ? ` <span class="ns-badge ns-badge-danger" title="${r.so_phieu} phiếu">Trùng</span>` : ''}`}</td>
                 ${cot.map((c) => `<td class="${SO.has(c) ? 'ns-num' : ''}">${r[c] == null ? '' : SO.has(c) ? formatNumber(r[c], LE.has(c) ? 1 : 0) : escapeHtml(r[c])}</td>`).join('')}
-                <td class="ns-actions">${r.name ? `<a class="ns-btn ns-btn-sm" href="/app/${st.loai === 'nhat' ? 'salaryday' : 'sx-phieu-luong'}/${encodeURIComponent(r.name)}" target="_blank">Mở phiếu</a>${st.loai === 'nhat' ? `<a class="ns-btn ns-btn-sm" href="/printview?doctype=SalaryDay&name=${encodeURIComponent(r.name)}&format=${encodeURIComponent('Phiếu lương công nhật')}" target="_blank">In</a>` : ''}` : ''}</td></tr>`).join('')}</tbody>
+                <td class="ns-actions">${r.name ? `<button class="ns-btn ns-btn-sm ns-btn-primary" data-xem="${escapeHtml(r.name)}">🧾 Xem</button><a class="ns-btn ns-btn-sm" href="/app/${st.loai === 'nhat' ? 'salaryday' : 'sx-phieu-luong'}/${encodeURIComponent(r.name)}" target="_blank">Mở phiếu</a>${st.loai === 'nhat' ? `<a class="ns-btn ns-btn-sm" href="/printview?doctype=SalaryDay&name=${encodeURIComponent(r.name)}&format=${encodeURIComponent('Phiếu lương công nhật')}" target="_blank">In</a>` : ''}` : ''}</td></tr>`).join('')}</tbody>
             <tfoot><tr><td></td><td class="ns-sticky">TỔNG (${rows.length})</td><td></td><td></td>${cot.map((c) => `<td class="${SO.has(c) ? 'ns-num' : ''}">${SO.has(c) ? formatNumber(tong[c], LE.has(c) ? 1 : 0) : ''}</td>`).join('')}<td></td></tr></tfoot></table></div>`;
-        body.innerHTML = paged({ rows, pageSize: 50, render: renderSlice });
+        body.innerHTML = paged({ rows, pageSize: 50, render: renderSlice, onDraw: (el) => {
+            el.querySelectorAll('[data-xem]').forEach((b) => { b.onclick = () => moPhieu(st.loai, b.dataset.xem, b); });
+        } });
     }
     sync(); load();
     return () => {};

@@ -7,6 +7,8 @@ import { showToast, withLoading } from '../components/toast.js';
 import { showModal, closeModal, confirmModal } from '../components/modal.js';
 import { inputFor, readValue, displayValue } from '../components/field.js';
 import { canhBaoList } from '../components/canh_bao.js';
+import { phieuLuongHtml } from '../components/phieu_luong.js';
+import { tkHtml, tkNutHtml, ganNutTaiKhoan } from '../components/tai_khoan.js';
 
 const CTX = window.NS_CONTEXT || {};
 const F = {
@@ -251,33 +253,35 @@ export async function render({ container, params, query = {}, setHeader }) {
         const now = new Date();
         if (!st.t) { st.t = now.getMonth() + 1; st.n = now.getFullYear(); }
         const mv = `${st.n}-${String(st.t).padStart(2, '0')}`;
-        body.innerHTML = `<div class="ns-card"><div class="ns-filters"><label class="ns-field"><span class="ns-field-label">Tháng</span><input class="ns-input" type="month" id="cl-month" value="${mv}"></label><span class="ns-text-sm ns-text-muted">Chỉ đọc · sửa công → <a href="/chamcong2">Chấm công</a>, sửa phiếu → ERPNext</span></div><div id="cl-body">${skeleton(80, 3)}</div></div>`;
+        body.innerHTML = `<div class="ns-card"><div class="ns-filters"><label class="ns-field"><span class="ns-field-label">Tháng</span><input class="ns-input" type="month" id="cl-month" value="${mv}"></label><span class="ns-text-sm ns-text-muted">Chỉ đọc · sửa công → <a href="/chamcong2">Chấm công</a>, sửa phiếu → ERPNext</span></div>
+            <div id="cl-tk" class="ns-mb-3"></div><div id="cl-body">${skeleton(80, 3)}</div></div>`;
         body.querySelector('#cl-month').onchange = (e) => { const [n, t] = e.target.value.split('-'); st.t = Number(t); st.n = Number(n); replaceQuery({ tab: 'luong', t: st.t, n: st.n }); drawLuong(); };
         replaceQuery({ tab: 'luong', t: st.t, n: st.n });
+        drawTaiKhoan(body.querySelector('#cl-tk'));
         const el = body.querySelector('#cl-body');
         let d;
         try { d = await ns.congLuong(name, st.t, st.n); } catch (e) { el.innerHTML = `<div class="ns-risk-bar">${escapeHtml(e.message)}</div>`; return; }
         if (!d.phieu.length) { el.innerHTML = emptyState('🧾', `Chưa có phiếu tháng ${st.t}/${st.n}`); return; }
         el.innerHTML = d.phieu.map(phieuHtml).join('');
     }
+    // Phiếu vẽ bằng component dùng chung (port thẻ Phiếu lương sx) — đúng thứ công nhân thấy ở /phieuluong.
     function phieuHtml(p) {
-        const h = p.header || {};
-        const nhat = p.loai === 'Nhật';
-        const kpi = nhat ? [['Ngày SX', h.ngaysanxuat, 0], ['Công', h.congngay, 1], ['Làm thêm', h.lamthem, 1], ['Lương công', h.luongngaycong], ['Lương làm thêm', h.luonglamthem], ['Ăn ca', h.anca], ['Chuyên cần', h.chuyencan], ['Hỗ trợ ngày công', h.hotrongaycong], ['Hỗ trợ', h.hotro], ['Thưởng khác', h.thuongkhac], ['Thưởng thâm niên', h.thuongthamnien], ['Tổng tiền', h.tongtien], ['Bảo hiểm', h.baohiem], ['Tiền phạt', h.tienphat], ['Tổng khấu trừ', h.tongkhautru], ['THỰC NHẬN', h.luongthucnhan], ['Chuyển khoản', h.luongck]]
-            : [['Ngày SX', h.ngay_san_xuat, 0], ['Công', h.ngay_cong, 1], ['Lương SP', h.luong_san_pham], ['Tiền ăn', h.tien_an], ['Chuyên cần', h.chuyen_can], ['Hỗ trợ ngày công', h.ho_tro_ngay_cong], ['Hỗ trợ', h.ho_tro], ['Thưởng thâm niên', h.thuong_tham_nien], ['Tổng tiền', h.tong_tien], ['Bảo hiểm', h.bao_hiem], ['Tiền phạt', h.tien_phat], ['Tổng khấu trừ', h.tong_khau_tru], ['THỰC NHẬN', h.luong_thuc_nhan]];
-        const tt = nhat ? (h.status || '') : (h.trang_thai || '');
-        return html`<div class="ns-section">
-            <div class="ns-flex ns-items-center ns-justify-between ns-flex-wrap ns-gap-2 ns-mb-2">
-                <div><b>${p.loai === 'Nhật' ? 'Lương công nhật' : 'Lương công khoán'}</b> · <span class="ns-sub">${p.name}</span>
-                    <span class="ns-badge ${p.docstatus === 1 ? 'ns-badge-success' : 'ns-badge-warning'}">${p.docstatus === 1 ? 'Đã duyệt' : 'Nháp'}${tt ? ' · ' + tt : ''}</span>
-                    ${p.trung ? raw('<span class="ns-badge ns-badge-danger">Trùng phiếu nháp</span>') : ''}</div>
-                <div class="ns-actions">${nhat ? raw(`<a class="ns-btn ns-btn-sm" href="${escapeHtml(p.in_url)}" target="_blank">🖨️ In</a>`) : ''}<a class="ns-btn ns-btn-sm" href="${p.desk_url}" target="_blank">Mở trong ERPNext</a></div></div>
-            <div class="ns-kpi-grid">${raw(kpi.map(([l, v, dg]) => `<div class="ns-kpi-card"><div class="ns-kpi-label">${escapeHtml(l)}</div><div class="ns-kpi-value ${l === 'THỰC NHẬN' ? 'success' : ''}" style="font-size:1.05rem">${dg === undefined ? formatNumber(v) : formatNumber(v, dg)}</div></div>`).join(''))}</div>
-            ${p.dong?.length ? raw(`<div class="ns-section-title ns-mt-3">Bảng ngày (${p.dong.length})</div><div class="ns-table-wrap"><table class="ns-table"><thead><tr>${nhat ? '<th>Ngày</th><th class="ns-num">Công</th><th class="ns-num">Thêm giờ</th>' : '<th>Ngày</th><th>Thứ</th><th>Ăn ca</th><th>Ăn đêm</th><th class="ns-num">Tiền ăn</th><th class="ns-num">Lương SP</th><th class="ns-num">Hệ số</th><th class="ns-num">Thu nhập ngày</th>'}</tr></thead><tbody>
-                ${p.dong.map((r) => nhat ? `<tr><td>${formatDate(r.ngay)}</td><td class="ns-num">${formatNumber(r.cong, 1)}</td><td class="ns-num">${formatNumber(r.them_gio, 1)}</td></tr>`
-                    : `<tr><td>${formatDate(r.ngay)}</td><td>${escapeHtml(r.thu || '')}</td><td>${r.an_ca ? '✓' : ''}</td><td>${r.an_dem ? '✓' : ''}</td><td class="ns-num">${formatNumber(r.tien_an)}</td><td class="ns-num">${formatNumber(r.luong_sp)}</td><td class="ns-num">${formatNumber(r.he_so, 1)}</td><td class="ns-num">${formatNumber(r.thu_nhap_ngay)}</td></tr>`).join('')}</tbody></table></div>`) : ''}
-            ${p.phat?.length ? raw(`<div class="ns-section-title ns-mt-3">Phạt (${p.phat.length})</div><div class="ns-table-wrap"><table class="ns-table"><thead><tr><th>Nội dung</th><th class="ns-num">SL</th><th class="ns-num">Giá</th><th class="ns-num">Thành tiền</th></tr></thead><tbody>${p.phat.map((r) => `<tr><td>${escapeHtml(r.noi_dung)}</td><td class="ns-num">${formatNumber(r.so_luong, 1)}</td><td class="ns-num">${formatNumber(r.gia_tien)}</td><td class="ns-num">${formatNumber(r.thanh_tien)}</td></tr>`).join('')}</tbody></table></div>`) : ''}
-        </div>`;
+        return `<div class="ns-pl-khung">
+            <div class="ns-actions ns-pl-nut"><span class="ns-sub">${escapeHtml(p.name)}</span>
+                ${p.trung ? '<span class="ns-badge ns-badge-danger">Trùng phiếu nháp</span>' : ''}
+                ${p.in_url ? `<a class="ns-btn ns-btn-sm" href="${escapeHtml(p.in_url)}" target="_blank">🖨️ In</a>` : ''}
+                <a class="ns-btn ns-btn-sm" href="${escapeHtml(p.desk_url)}" target="_blank">Mở trong ERPNext</a></div>
+            ${phieuLuongHtml(p.xem)}</div>`;
+    }
+    // Ô tài khoản xem lương của người này (tạo / cấp lại / khoá / gỡ — nút chỉ hiện với HR Manager).
+    async function drawTaiKhoan(o) {
+        let d;
+        try { d = await ns.taiKhoan.cuaNv(name); } catch (e) { o.innerHTML = ''; return; }
+        if (!d.co_field) { o.innerHTML = ''; return; }
+        const nv = { employee: name, employee_name: st.data.employee_name, cell_number: d.cell_number, tai_khoan: d.tai_khoan };
+        o.innerHTML = `<div class="ns-risk-bar ns-info-bar" style="margin:0"><span>🔑 <b>Tài khoản xem lương:</b></span><span>${tkHtml(d.tai_khoan)}</span>
+            <span class="ns-actions">${tkNutHtml(nv)}${d.tai_khoan ? `<a class="ns-btn ns-btn-sm ns-btn-ghost" href="/phieuluong?nv=${encodeURIComponent(name)}" target="_blank">👁 Xem như công nhân</a>` : ''}</span></div>`;
+        ganNutTaiKhoan(o, () => nv, () => drawTaiKhoan(o));
     }
 
     drawBanner(); drawTabs(); drawBody();

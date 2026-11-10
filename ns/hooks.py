@@ -38,4 +38,7 @@ fixtures = [
 ]
 
 # ═══ Install ═══
+# Role "NS Cong Nhan" (công nhân tự xem phiếu lương ở /phieuluong): CHỈ tạo khi thiếu — không ship qua fixtures
+# (fixtures xoá - tạo lại role mỗi lần migrate → Frappe đăng xuất người giữ role, bài học app sx D105).
 after_install = "ns.setup.install.after_install"
+after_migrate = "ns.setup.install.after_migrate"

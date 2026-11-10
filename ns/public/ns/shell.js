@@ -4,7 +4,7 @@ import { escapeHtml } from './lib/format.js';
 import { showToast } from './components/toast.js';
 import { closeModal } from './components/modal.js';
 
-const BUILD = 'ns-r1'; // PHẢI khớp SHELL_BUILD trong www/ns.py
+const BUILD = 'ns-r2'; // PHẢI khớp SHELL_BUILD trong www/ns.py
 const CTX = window.NS_CONTEXT || {};
 console.log(`[NS] shell build=${BUILD}`);
 window.NS_APP = { build: BUILD, ctx: CTX, navigate };
@@ -16,6 +16,7 @@ const VIEW_MODULES = {
     bo_sung: () => import(withV('./views/bo_sung.js')),
     luong: () => import(withV('./views/luong.js')),
     viec: () => import(withV('./views/viec.js')),
+    tai_khoan: () => import(withV('./views/tai_khoan.js')),
 };
 
 const NAV = [
@@ -24,6 +25,8 @@ const NAV = [
     { key: 'luong', href: '#/luong', icon: '💰', label: 'Lương', match: (p) => p.startsWith('/luong') },
     { key: 'viec', href: '#/viec', icon: '✅', label: 'Việc', match: (p) => p.startsWith('/viec') },
     { key: 'chamcong', href: '/chamcong2', icon: '🕒', label: 'Chấm công', match: () => false, external: true },
+    // Thanh dưới điện thoại giữ 5 ô; Tài khoản vào từ menu 👤 và nút trên màn Lương.
+    { key: 'tai_khoan', href: '#/tai-khoan', icon: '🔑', label: 'Tài khoản', match: (p) => p.startsWith('/tai-khoan'), desktopOnly: true },
 ];
 
 const viewEl = () => document.getElementById('ns-view');
@@ -48,7 +51,7 @@ function renderHeader(title, { back = false, actions = '' } = {}) {
 function renderNav() {
     const n = document.getElementById('ns-nav');
     if (!n) return;
-    n.innerHTML = NAV.map((x) => `<a class="ns-nav-item" href="${x.href}" data-nav="${x.key}"><span class="ns-nav-icon">${x.icon}</span><span>${x.label}</span></a>`).join('');
+    n.innerHTML = NAV.filter((x) => !x.desktopOnly).map((x) => `<a class="ns-nav-item" href="${x.href}" data-nav="${x.key}"><span class="ns-nav-icon">${x.icon}</span><span>${x.label}</span></a>`).join('');
     markActive();
 }
 function markActive() {
@@ -64,6 +67,8 @@ function toggleAcct() {
     m = document.createElement('div'); m.id = 'ns-acct-menu'; m.className = 'ns-acct-menu';
     m.innerHTML = `<div class="ns-acct-name">${escapeHtml(CTX.full_name || CTX.user)}</div>
         <div class="ns-acct-sub">${escapeHtml(CTX.user)}${CTX.isManager ? ' · HR Manager' : ''}</div>
+        <a class="ns-acct-link" href="#/tai-khoan">🔑 Tài khoản xem lương</a>
+        <a class="ns-acct-link" href="/phieuluong">🧾 Trang phiếu lương công nhân</a>
         <a class="ns-acct-link" href="/app/employee">Mở ERPNext (Desk)</a>
         <a class="ns-acct-link" href="/chamcong2">Chấm công</a>
         <button class="ns-acct-logout" id="ns-logout">Đăng xuất</button>`;
@@ -98,6 +103,7 @@ route('/nv/:name', ({ params, query }) => show('ho_so', { params, query }));
 route('/bo-sung', ({ query }) => show('bo_sung', { query }));
 route('/luong', ({ query }) => show('luong', { query }));
 route('/viec', ({ query }) => show('viec', { query }));
+route('/tai-khoan', ({ query }) => show('tai_khoan', { query }));
 route('/chamcong', () => { window.location.href = '/chamcong2'; });
 setNotFound(() => navigate('/', true));
 

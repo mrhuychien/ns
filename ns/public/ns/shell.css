@@ -232,3 +232,77 @@ body > .web-footer, body > footer, .navbar.navbar-light, .page-footer { display:
 .ns-w-full { width: 100%; } .ns-section-title { font-weight: 800; font-size: .95rem; margin-bottom: .5rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .ns-hide-mobile { display: none; } @media (min-width: 768px) { .ns-hide-mobile { display: initial; } }
 @media (min-width: 900px) { .ns-emp-list-wrap { display: none; } }
+
+/* ── Phiếu lương (port thẻ Phiếu lương app sx: D110 + từng ngày D234) ────────────────────────────────────────
+   Dùng ở tab Công & lương, modal bảng lương và trang công nhân /phieuluong. Bảng từng ngày VỪA màn 360px (không
+   bọc khung cuộn ngang — khung cuộn ngang làm hỏng đầu cột dính): cột tên tự xuống dòng, cột số không xuống dòng. */
+.ns-pl { display: flex; flex-direction: column; gap: .3rem; }
+.ns-pl + .ns-pl { margin-top: 1.25rem; padding-top: 1rem; border-top: 2px dashed var(--ns-border); }
+.ns-pl-dau { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.ns-pl-loai { font-weight: 800; font-size: .98rem; }
+.ns-pl-nhan-tt { display: flex; gap: .3rem; flex-wrap: wrap; }
+.ns-pl-bao { margin: .2rem 0; }
+.ns-pl-tong { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .5rem; margin: .3rem 0 .2rem; }
+.ns-pl-tong > div { display: flex; flex-direction: column; gap: 2px; background: var(--ns-surface-2); border-radius: var(--ns-radius-sm); padding: .5rem .65rem; min-width: 0; }
+.ns-pl-tong b { font-size: 1rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ns-pl-tong .ns-pl-tong-chinh { background: #ecfdf5; grid-column: 1 / -1; }   /* số quan trọng nhất: trọn một hàng, không tràn */
+.ns-pl-tong .ns-pl-tong-chinh b { color: #047857; font-size: 1.15rem; }
+.ns-pl-nhan { font-size: .66rem; color: var(--ns-text-3); text-transform: uppercase; letter-spacing: .4px; font-weight: 700; }
+.ns-pl-muc { margin-top: .7rem; font-size: .7rem; font-weight: 800; color: var(--ns-text-2); text-transform: uppercase; letter-spacing: .5px; }
+.ns-pl-list { display: flex; flex-direction: column; }
+.ns-pl-row { display: flex; align-items: center; gap: .75rem; padding: .45rem 0; border-bottom: 1px solid var(--ns-border); }
+.ns-pl-row:last-child { border-bottom: 0; }
+.ns-pl-row-ten { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ns-pl-row-so { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
+.ns-pl-row-tong .ns-pl-row-ten, .ns-pl-row-tong .ns-pl-row-so { font-weight: 800; }
+.ns-pl-row-thuc .ns-pl-row-so { color: #047857; }
+.ns-pl-row-tru .ns-pl-row-so { color: #b91c1c; }
+.ns-pl-row-phu .ns-pl-row-ten, .ns-pl-row-phu .ns-pl-row-so { color: var(--ns-text-2); font-weight: 500; font-size: .82rem; }
+.ns-pl-phu { font-size: .75rem; color: var(--ns-text-3); font-weight: 400; }
+.ns-pl-canh { color: #b45309; font-weight: 600; }
+.ns-pl-ghichu { white-space: pre-wrap; font-size: .85rem; color: var(--ns-text-2); }
+.ns-pl-ngay { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.ns-pl-ngay th { position: sticky; top: var(--ns-header-h); z-index: 2; background: var(--ns-surface-2); font-size: .64rem; font-weight: 700;
+    color: var(--ns-text-2); text-transform: uppercase; letter-spacing: .4px; }
+.ns-pl-ngay th, .ns-pl-ngay td { padding: .42rem .3rem; border-bottom: 1px solid var(--ns-border); vertical-align: top; text-align: left; }
+.ns-pl-ngay th { vertical-align: bottom; }
+/* Cột số không xuống dòng (so hàng đơn vị); nhãn cột và "⚠ chưa có giá" thì được xuống dòng — nhường bề ngang cho
+   tên sản phẩm ở màn 360px. */
+.ns-pl-ngay td:not(:first-child), .ns-pl-ngay th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.ns-pl-ngay td:not(:first-child) { white-space: nowrap; }
+.ns-pl-ngay td .ns-pl-canh { white-space: normal; }
+.ns-pl-ngay td:first-child { overflow-wrap: anywhere; }
+@media (max-width: 420px) { .ns-pl-ngay { font-size: .8rem; } .ns-pl-ngay th, .ns-pl-ngay td { padding: .4rem .22rem; } }
+.ns-pl-ngay .ns-pl-ngay-dau td { background: var(--ns-surface-2); padding-top: .55rem; text-align: left; white-space: normal; }
+.ns-pl-ngay .ns-pl-ngay-cong td { border-bottom: 2px solid #cbd5e1; }
+.ns-pl-ngay .ns-pl-ngay-cong td:first-child { text-align: left; white-space: normal; }
+.ns-pl-ngay tr.ns-pl-cn td { background: #f8fafc; }
+.ns-pl-ngay tr.ns-pl-trong td { color: var(--ns-text-3); }
+/* Trong modal, khung cuộn là .ns-modal-content (lề trên 1rem) → đầu cột dính sát mép khung */
+.ns-modal-content .ns-pl-ngay th { top: -1rem; }
+.ns-pl-khung + .ns-pl-khung { margin-top: 1.25rem; padding-top: 1rem; border-top: 2px dashed var(--ns-border); }
+.ns-pl-nut { justify-content: flex-end; margin-bottom: .4rem; }
+
+/* ── Trang công nhân /phieuluong — một cột, chữ to, bấm bằng ngón cái ───────────────────────────────────── */
+.ns-cn { padding-bottom: 1.5rem; }
+.ns-cn-main { max-width: 640px; }
+.ns-cn-chao { margin: .25rem 0 .75rem; }
+.ns-cn-ten { font-size: 1.2rem; font-weight: 800; letter-spacing: -.01em; }
+.ns-cn-phu { font-size: .8rem; color: var(--ns-text-2); }
+.ns-cn-thang { display: grid; grid-template-columns: 48px 1fr 48px; gap: .4rem; align-items: center; margin-bottom: .75rem; }
+.ns-cn-thang .ns-icon-btn { width: 48px; height: 48px; font-size: 1.5rem; font-weight: 700; background: var(--ns-surface); border: 1px solid var(--ns-border); }
+.ns-cn-thang .ns-icon-btn:disabled { opacity: .35; cursor: default; }
+.ns-app select.ns-input.ns-cn-chon { min-height: 48px; font-size: 1rem; font-weight: 700; text-align: center; }
+.ns-cn-phieu { padding: .9rem .7rem; }
+.ns-cn-chan { margin-top: 1rem; font-size: .78rem; color: var(--ns-text-3); text-align: center; }
+.ns-cn .ns-pl-tong .ns-pl-tong-chinh b { font-size: 1.35rem; }
+
+/* ── Màn Tài khoản (#/tai-khoan) ── */
+.ns-tk-list { display: flex; flex-direction: column; gap: .5rem; }
+.ns-tk-row { display: flex; align-items: center; gap: .7rem; background: var(--ns-surface); border: 1px solid var(--ns-border); border-radius: var(--ns-radius-md); padding: .65rem .8rem; flex-wrap: wrap; }
+.ns-tk-row input[type=checkbox] { width: 20px; height: 20px; flex-shrink: 0; }
+.ns-tk-who { flex: 1 1 180px; min-width: 0; }
+.ns-tk-name { font-weight: 700; } .ns-tk-meta { font-size: .75rem; color: var(--ns-text-2); }
+.ns-tk-acc { flex: 1 1 160px; font-size: .8rem; }
+.ns-tk-row .ns-actions { margin-left: auto; }
+.ns-tk-mk { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; }

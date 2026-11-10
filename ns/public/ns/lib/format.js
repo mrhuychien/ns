@@ -1,6 +1,11 @@
 // Định dạng VN tập trung + escapeHtml
 const nf0 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
+const NF = new Map([[0, nf0], [1, nf1]]);
+const nf = (d) => {
+    if (!NF.has(d)) NF.set(d, new Intl.NumberFormat('vi-VN', { maximumFractionDigits: d }));
+    return NF.get(d);
+};
 
 export function escapeHtml(v) {
     if (v === null || v === undefined) return '';
@@ -12,7 +17,8 @@ export function formatNumber(v, digits = 0) {
     if (v === null || v === undefined || v === '') return '';
     const n = Number(v);
     if (Number.isNaN(n)) return escapeHtml(v);
-    return digits ? nf1.format(n) : nf0.format(Math.round(n));
+    // digits = số lẻ TỐI ĐA (1 → "2,5"; 2 → giờ lẻ "2,25" không làm tròn thành "2,3")
+    return digits ? nf(digits).format(n) : nf0.format(Math.round(n));
 }
 export function formatCurrency(v) {
     if (v === null || v === undefined || v === '') return '—';

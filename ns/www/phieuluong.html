@@ -1,0 +1,69 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block head_include %}
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/ns/ns/shell.css?v={{ asset_version }}">
+{# Luật vàng #1: import map remap mọi shared module trang này dùng sang URL có ?v= (static import bỏ query) #}
+<script type="importmap">
+{ "imports": {
+  "/assets/ns/ns/lib/api.js":                 "/assets/ns/ns/lib/api.js?v={{ asset_version }}",
+  "/assets/ns/ns/lib/format.js":              "/assets/ns/ns/lib/format.js?v={{ asset_version }}",
+  "/assets/ns/ns/components/phieu_luong.js":  "/assets/ns/ns/components/phieu_luong.js?v={{ asset_version }}"
+}}
+</script>
+<script>
+{# Cùng tên NS_CONTEXT với /ns: lib/api.js đọc csrfToken ở đây #}
+window.NS_CONTEXT = {{ cn_context | tojson }};
+</script>
+{% endblock %}
+
+{% block page_content %}
+<div id="ns-app" class="ns-app ns-cn">
+  <header class="ns-header"><div class="ns-header-inner">
+    <span class="ns-logo">NS</span>
+    <div class="ns-header-title">Phiếu lương</div>
+    <div class="ns-header-actions">
+      <button class="ns-icon-btn" id="cn-menu-btn" aria-label="Tài khoản" title="Tài khoản">👤</button>
+    </div>
+  </div></header>
+  <main class="ns-main ns-cn-main">
+    {% if not co_nhan_vien %}
+    <div class="ns-empty" style="padding-top:3rem">
+      <div class="ns-empty-icon">🔒</div>
+      <div class="ns-empty-title">Tài khoản chưa gắn với hồ sơ nhân viên</div>
+      {% if la_hr %}
+      <div>Bạn là phòng nhân sự: cấp tài khoản cho công nhân ở <a class="ns-link" href="/ns#/tai-khoan">Nhân sự → Tài khoản</a>,
+        hoặc xem đúng màn của một công nhân bằng <b>/phieuluong?nv=&lt;mã NV&gt;</b>.</div>
+      {% else %}
+      <div>Tài khoản <b>{{ frappe.session.user }}</b> chưa được gắn với hồ sơ của bạn.<br>Liên hệ phòng nhân sự để được cấp.</div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div id="cn-view"><div class="ns-skeleton" style="height:240px"></div></div>
+    {% endif %}
+  </main>
+  <div id="ns-toast-mount" class="ns-toast-mount"></div>
+  <script type="module" src="/assets/ns/ns/cong_nhan.js?v={{ asset_version }}"></script>
+  <script>
+  // Luật vàng #2 — handshake build: trang cũ do cache → banner đỏ thay vì hỏng ngầm
+  window.addEventListener('load', function () { setTimeout(function () {
+    var expected = {{ shell_build | tojson }};
+    var got = window.NS_CN && window.NS_CN.build;
+    if (got === expected) return;
+    console.error('[NS] cong_nhan build lệch: got=' + got + ' expected=' + expected);
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:10px 14px;font:600 14px Inter,sans-serif;text-align:center';
+    d.innerHTML = 'Trang đang chạy bản CŨ do cache. <a style="color:#fff;text-decoration:underline" href="/phieuluong?r=' + Date.now() + '">Tải lại</a>';
+    document.body.appendChild(d);
+  }, 3000); });
+  </script>
+</div>
+{% endblock %}

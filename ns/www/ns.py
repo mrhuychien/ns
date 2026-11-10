@@ -10,7 +10,7 @@ no_cache = 1
 sitemap = 0
 
 # PHẢI khớp BUILD trong public/ns/shell.js (Luật vàng #2 — chống shell cũ)
-SHELL_BUILD = "ns-r1"
+SHELL_BUILD = "ns-r2"
 
 
 def _asset_version():

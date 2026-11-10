@@ -94,6 +94,17 @@ export const ns = {
     },
     lichSu: (employee) => call('ns.api.lich_su.get', { employee }),
     congLuong: (employee, thang, nam) => call('ns.api.cong_luong.thang', { employee, thang, nam }),
+    phieuLuong: {
+        xem: (doctype, name) => call('ns.api.phieu_luong.xem', { doctype, name }),
+    },
+    taiKhoan: {
+        danhSach: () => call('ns.api.tai_khoan.danh_sach'),
+        cuaNv: (employee) => call('ns.api.tai_khoan.cua_nv', { employee }),
+        tao: (employee, sdt, xac_nhan = 0) => call('ns.api.tai_khoan.tao', { employee, sdt, xac_nhan }),
+        capLai: (employee) => call('ns.api.tai_khoan.cap_lai', { employee }),
+        khoa: (employee, khoa) => call('ns.api.tai_khoan.khoa', { employee, khoa }),
+        go: (employee) => call('ns.api.tai_khoan.go', { employee }),
+    },
     luong: {
         bang: (a) => call('ns.api.luong.bang', a),
         xuatExcel: (a) => download('ns.api.luong.xuat_excel', a),
