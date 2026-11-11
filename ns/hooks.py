@@ -6,6 +6,22 @@ app_email = "mrhuychien@gmail.com"
 app_license = "MIT"
 required_apps = ["frappe", "erpnext", "hrms"]
 
+# ═══ App trên Desk: ô màn Apps + icon trang chủ (lưới icon) ═══
+# Bấm vào → trang chủ app trên Desk /desk/ns (workspace "NS", tiêu đề "Nhân sự": lối vào portal /ns, các màn của
+# portal, danh mục Desk). Route /desk/…: khớp mẫu Desk của v16 (frappe.apps.DESK_APP_PATTERN) nên đăng nhập vẫn vào
+# /desk, không bị đẩy ra màn chọn app (cách app sx D236 đã chạy). Ai thấy: ns.api.co_quyen_app_desk — người dùng Desk
+# có vai HR; công nhân (Website User) không. Lưới icon đọc icon từ ns/desktop_icon/ns.json (migrate nạp), không đọc
+# hook này. KHÔNG khai app_logo_url (Frappe lấy làm logo thanh điều hướng của cả Desk).
+add_to_apps_screen = [
+    {
+        "name": "ns",
+        "logo": "/assets/ns/images/ns-logo.svg",
+        "title": "Nhân sự",
+        "route": "/desk/ns",
+        "has_permission": "ns.api.co_quyen_app_desk",
+    }
+]
+
 # ═══ Website ═══
 # Route /ns do www/ns.py + www/ns.html phục vụ (SPA hash router).
 website_route_rules = [

@@ -1,0 +1,20 @@
+{
+ "app": "ns",
+ "creation": "2026-11-11 09:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_type": "App",
+ "idx": 51,
+ "label": "NS",
+ "link": "/desk/ns",
+ "link_type": "External",
+ "logo_url": "/assets/ns/images/ns-logo.svg",
+ "modified": "2026-11-11 09:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "NS",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}

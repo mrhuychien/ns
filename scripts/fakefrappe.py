@@ -418,6 +418,7 @@ def cai():
     fr.get_list = get_all
     fr.get_doc = get_doc
     fr.get_meta = get_meta
+    fr.get_cached_value = lambda dt, ten, f: get_value(dt, ten, f)
     fr.conf = CONF
     fr.get_system_settings = lambda k: HE_THONG.get(k)
     fr.__dict__["_"] = lambda s, *a, **k: s

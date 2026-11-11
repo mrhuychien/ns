@@ -1,0 +1,160 @@
+{
+ "app": "ns",
+ "charts": [],
+ "content": "[{\"id\": \"ns-dau\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Nhân sự RVHG</b></span>\", \"col\": 12}}, {\"id\": \"ns-tat-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Mở trang Nhân sự\", \"col\": 3}}, {\"id\": \"ns-tat-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Việc cần làm\", \"col\": 3}}, {\"id\": \"ns-tat-3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bảng lương tháng\", \"col\": 3}}, {\"id\": \"ns-tat-4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bổ sung hồ sơ\", \"col\": 3}}, {\"id\": \"ns-tat-5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tài khoản xem lương\", \"col\": 3}}, {\"id\": \"ns-tat-6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Trang phiếu lương công nhân\", \"col\": 3}}, {\"id\": \"ns-tat-7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Nhân viên\", \"col\": 3}}, {\"id\": \"ns-tat-8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sự kiện nhân sự\", \"col\": 3}}, {\"id\": \"ns-cach\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ns-dau-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Tất cả chức năng</b></span>\", \"col\": 12}}, {\"id\": \"ns-the-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Hồ sơ nhân sự\", \"col\": 4}}, {\"id\": \"ns-the-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Danh mục\", \"col\": 4}}]",
+ "creation": "2026-11-11 09:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "users",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "NS",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Hồ sơ nhân sự",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Nhân viên",
+   "link_count": 0,
+   "link_to": "Employee",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sự kiện nhân sự",
+   "link_count": 0,
+   "link_to": "NS Su Kien",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Danh mục",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bộ phận",
+   "link_count": 0,
+   "link_to": "Department",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Chức danh",
+   "link_count": 0,
+   "link_to": "Designation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-11-11 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NS",
+ "name": "NS",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [
+  {
+   "role": "HR User"
+  },
+  {
+   "role": "HR Manager"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 41.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Mở trang Nhân sự",
+   "type": "URL",
+   "url": "/ns"
+  },
+  {
+   "color": "Red",
+   "doc_view": "",
+   "label": "Việc cần làm",
+   "type": "URL",
+   "url": "/ns#/viec"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "label": "Bảng lương tháng",
+   "type": "URL",
+   "url": "/ns#/luong"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "label": "Bổ sung hồ sơ",
+   "type": "URL",
+   "url": "/ns#/bo-sung"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "",
+   "label": "Tài khoản xem lương",
+   "type": "URL",
+   "url": "/ns#/tai-khoan"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "",
+   "label": "Trang phiếu lương công nhân",
+   "type": "URL",
+   "url": "/phieuluong"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Nhân viên",
+   "link_to": "Employee",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Sự kiện nhân sự",
+   "link_to": "NS Su Kien",
+   "type": "DocType"
+  }
+ ],
+ "standard": 1,
+ "title": "Nhân sự",
+ "type": "Workspace"
+}

@@ -23,6 +23,7 @@ chay python3 scripts/test-importmap.py
 chay python3 scripts/test-phieuluong.py
 chay python3 scripts/test-congnhan.py
 chay python3 scripts/test-taikhoan.py
+chay python3 scripts/test-desk.py
 chay node scripts/test-giaodien.mjs
 
 echo

@@ -29,6 +29,19 @@ def la_quan_ly(user=None):
     return bool(roles_cua(user) & ROLE_QUAN_LY)
 
 
+def co_quyen_app_desk(user=None):
+    """has_permission của ô NS trên màn Apps (hooks.add_to_apps_screen) và icon NS trên trang chủ Desk: người dùng Desk
+    (System User) có vai HR của app, hoặc Administrator. Công nhân (Website User, role NS Cong Nhan) không thấy — họ
+    vào /phieuluong. `user` trống = người đang đăng nhập (Frappe gọi hook không truyền gì); patch thêm icon vào bố cục
+    trang chủ đã lưu hỏi cho từng người."""
+    user = user or frappe.session.user
+    if user == "Administrator":
+        return True
+    if not co_quyen(user):
+        return False
+    return frappe.get_cached_value("User", user, "user_type") == "System User"
+
+
 def guard():
     """Chặn Guest / user không có role HR. Gọi ở dòng đầu mọi whitelisted method."""
     if not co_quyen():

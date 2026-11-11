@@ -39,6 +39,11 @@ người đó, không có tháng còn nháp; sửa địa chỉ thành `/phieulu
 ```
 ns/
   hooks.py                 doc_events Employee (validate/after_insert/on_update) · SalaryDay.validate (P1) · fixtures Custom Field ns_*
+                           · add_to_apps_screen (ô "Nhân sự" trên màn Apps của Desk)
+  desktop_icon/ns.json     icon NS trên trang chủ Desk kiểu lưới icon (migrate nạp; CHỈ tệp .json trong thư mục này)
+  ns/workspace/ns/ns.json  trang chủ app trên Desk /desk/ns (workspace "NS", tiêu đề "Nhân sự")
+  patches/them_icon_ns_vao_bo_cuc.py   thêm icon NS vào bố cục lưới đã lưu của người có quyền (chạy một lần)
+  public/images/ns-logo.svg            logo NS (ô màn Apps + icon)
   api/                     mọi @frappe.whitelist(), dòng đầu guard()
     __init__.py            guard() / guard_quan_ly() — HR User | HR Manager | System Manager
     common.py              hằng số, whitelist field §4.1.1, validate, helper đọc Employee
@@ -155,6 +160,31 @@ QR trên thẻ **chỉ chứa địa chỉ trang** (không phải mã đăng nh�
 cần mật khẩu, nhưng mật khẩu in ngay trên thẻ nên vẫn dặn giữ thẻ như chìa khoá. HR cấp lại mật khẩu thì Frappe gửi
 thông báo "mật khẩu đã đổi" tới email giả (không ai nhận) — đúng như tài khoản sx.
 
+## Icon NS ngoài trang chủ Desk
+
+Trang chủ Desk (`/desk`) có icon **NS** (logo xanh) cạnh icon SX; màn Apps có ô **Nhân sự**. Bấm vào → trang chủ app
+trên Desk **`/desk/ns`** (workspace "NS", tiêu đề "Nhân sự"):
+
+- Lối tắt: **Mở trang Nhân sự** (`/ns`) · Việc cần làm · Bảng lương tháng · Bổ sung hồ sơ · Tài khoản xem lương ·
+  Trang phiếu lương công nhân (`/phieuluong`) · Nhân viên · Sự kiện nhân sự.
+- Tất cả chức năng: *Hồ sơ nhân sự* (Nhân viên, Sự kiện nhân sự) · *Danh mục* (Bộ phận, Chức danh). Chỉ link DocType
+  chắc chắn có trên site (của ns / ERPNext) — link tới DocType không có làm Administrator mất sạch các card.
+- **Ai thấy**: người dùng Desk có vai HR User / HR Manager / System Manager, và Administrator
+  (`ns.api.co_quyen_app_desk`, một nguồn với guard của API). Công nhân (Website User) không thấy — họ vào `/phieuluong`.
+
+Làm đủ ba lớp như app sx đã phải làm qua ba lần (D236 → D237 → D238) trên chính site này (Frappe 16.16.0):
+
+| Lớp | Vì sao cần |
+|---|---|
+| `add_to_apps_screen` trong hooks.py — route `/desk/ns`, `has_permission` | Màn Apps đọc hook này lúc chạy; route `/desk/…` khớp mẫu Desk của v16 nên đăng nhập vẫn vào `/desk` (route ngoài Desk như `/ns` làm Frappe đẩy người dùng ra màn chọn app). Lưới icon cũng lấy quyền icon App từ `has_permission` này. Không khai `app_logo_url` (sẽ đổi logo thanh điều hướng của cả Desk) |
+| `ns/desktop_icon/ns.json` (Desktop Icon loại App, nhãn = `app_title` "NS") | Lưới icon chỉ tự tạo icon **lúc cài app** — app đã cài thì phải ship tệp icon, migrate nạp. Tên tệp đúng `scrub(tên).json`, không thì bộ dọn icon thừa của Frappe xoá icon ở lần migrate sau |
+| Patch `ns.patches.them_icon_ns_vao_bo_cuc` (post_model_sync, chạy một lần) | Frappe 16.16 vẽ trang chủ theo **bố cục đã lưu** của từng người (ai từng kéo thả lưới) và không tự thêm icon chuẩn mới vào đó. Patch thêm icon NS vào **cuối** bố cục của người có quyền, giữ nguyên sắp xếp cũ; người không có quyền không đụng |
+
+**Cập nhật**: `git pull` → `bench --site site1.local migrate` → `bench restart` → tải lại Desk (Ctrl+Shift+R).
+Vẫn không thấy icon (vd. người tạo bố cục sau khi patch đã chạy): ở trang chủ Desk bấm ảnh đại diện →
+**Reset Desktop Layout** (mất sắp xếp riêng, lưới về mặc định có icon NS) — hoặc thêm icon NS vào lưới bằng tay.
+Sửa bố cục workspace trên site (kéo thả, thêm khối) thì Frappe lưu bản tuỳ biến riêng, cập nhật app không mất.
+
 ## Việc làm tay trên Desk (§8 — ngoài code)
 
 - [ ] **Đã duyệt:** `SalaryDay` → Role Permission Manager → xoá dòng role `Employee` (đang `write = 1`). Làm ngay.
@@ -177,7 +207,10 @@ phủ đủ module dùng chung — Luật vàng #1; BUILD khớp — Luật vàn
 từng ngày, giờ, chưa có giá, Σ khoản = tổng thu nhập, quyền), `test-congnhan.py` (rò rỉ: Guest / chưa gắn / bị khoá /
 truyền mã người khác, chỉ phiếu đã duyệt, cờ xem nháp + P1, xem như công nhân), `test-taikhoan.py` (tạo theo SĐT,
 xác nhận gắn tài khoản sẵn có, không đụng tài khoản dùng chung / Administrator, khoá → đăng xuất, gỡ);
-`test-giaodien.mjs` — Chromium thật ở màn 360px, chạy **API Python thật** trên Frappe giả (`scripts/server-thu.py`),
+`test-desk.py` (workspace nạp được — đúng chỗ, content ↔ card / shortcut, link chỉ tới DocType chắc có, URL trỏ màn
+có thật; ô màn Apps — route khớp mẫu Desk, logo SVG, has_permission, không app_logo_url; icon — thư mục chỉ .json, tên
+tệp = scrub(tên), nhãn = app_title, link = route; ai thấy; patch bố cục đã lưu — chỉ người có quyền, cuối hàng, giữ thứ
+tự, ASCII, chạy lại không ghi); `test-giaodien.mjs` — Chromium thật ở màn 360px, chạy **API Python thật** trên Frappe giả (`scripts/server-thu.py`),
 trang dựng từ chính `www/*.html`: bảng từng ngày đúng cột (port test D234 của sx), không kéo ngang, đầu cột dính,
 không chèn HTML, chọn tháng / tải lại giữ tháng, trình duyệt không gửi mã nhân viên, đăng xuất, màn Tài khoản (tạo hàng
 loạt, in thẻ có QR, HR User không thấy nút sửa), modal Xem phiếu, hồ sơ → Công & lương. `NS_SHOT=<thư mục>` để chụp ảnh.
