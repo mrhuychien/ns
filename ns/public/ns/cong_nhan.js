@@ -12,7 +12,7 @@ import { call } from './lib/api.js';
 import { escapeHtml as esc } from './lib/format.js';
 import { phieuLuongHtml } from './components/phieu_luong.js';
 
-const BUILD = 'ns-cn2'; // PHẢI khớp SHELL_BUILD trong www/phieuluong.py
+const BUILD = 'ns-cn3'; // PHẢI khớp SHELL_BUILD trong www/phieuluong.py
 const CTX = window.NS_CONTEXT || {};
 window.NS_CN = { build: BUILD };
 console.log(`[NS] cong_nhan build=${BUILD}`);
@@ -76,10 +76,12 @@ function thanhXemThay() {
     if (!CTX.xemThay) return '';
     if (CTX.tuThe) {
         return `<div class="ns-risk-bar ns-info-bar ns-cn-the"><span>Thẻ của <b>${esc(CTX.employeeName)}</b>. Máy đang đăng nhập bằng
-            tài khoản phòng nhân sự (<b>${esc(CTX.full_name || CTX.user)}</b>) nên đang <b>xem như công nhân</b>.</span>
+            tài khoản phòng nhân sự (<b>${esc(CTX.full_name || CTX.user)}</b>) nên đang <b>xem như công nhân</b> — có cả phiếu
+            <b>tạm tính</b> (chưa duyệt).</span>
             <button class="ns-btn ns-btn-sm" data-cn-dang-xuat>Đăng xuất để thử đăng nhập bằng thẻ</button></div>`;
     }
-    return `<div class="ns-risk-bar ns-info-bar"><span>Phòng nhân sự đang <b>xem như công nhân</b>: ${esc(CTX.employeeName)} · ${esc(CTX.employee)}</span></div>`;
+    return `<div class="ns-risk-bar ns-info-bar"><span>Phòng nhân sự đang <b>xem như công nhân</b>: ${esc(CTX.employeeName)} · ${esc(CTX.employee)}
+        — có cả phiếu <b>tạm tính</b> (chưa duyệt).</span></div>`;
 }
 
 function veKhung() {
@@ -90,7 +92,7 @@ function veKhung() {
             <div class="ns-cn-phu">${esc(CTX.employee || '')}${CTX.department ? ` · ${esc(CTX.department)}` : ''}</div></div>
         <div class="ns-cn-thang">
             <button class="ns-icon-btn ns-cn-lui" id="cn-lui" aria-label="Tháng trước" ${st.i >= st.thang.length - 1 ? 'disabled' : ''}>‹</button>
-            <select class="ns-input ns-cn-chon" id="cn-chon" aria-label="Chọn tháng">${st.thang.map((t, i) => `<option value="${i}" ${i === st.i ? 'selected' : ''}>Tháng ${t.thang}/${t.nam}${t.tam_tinh ? ' · tạm tính' : ''}</option>`).join('')}</select>
+            <select class="ns-input ns-cn-chon" id="cn-chon" aria-label="Chọn tháng">${st.thang.map((t, i) => `<option value="${i}" ${i === st.i ? 'selected' : ''}>${t.tam_tinh ? `Tạm tính T${t.thang}/${t.nam}` : `Tháng ${t.thang}/${t.nam}`}</option>`).join('')}</select>
             <button class="ns-icon-btn ns-cn-toi" id="cn-toi" aria-label="Tháng sau" ${st.i <= 0 ? 'disabled' : ''}>›</button>
         </div>
         <div id="cn-phieu" class="ns-card ns-cn-phieu" aria-live="polite"><div class="ns-skeleton" style="height:220px"></div></div>
@@ -124,7 +126,7 @@ async function taiPhieu(x) {
     }
     if (khoa(st.thang[st.i]) !== k) return; // đã chuyển tháng khác trong lúc chờ
     o.innerHTML = d.phieu.length
-        ? d.phieu.map((p) => phieuLuongHtml(p, { congNhan: true })).join('')
+        ? d.phieu.map((p) => phieuLuongHtml(p, { congNhan: true, xemThay: !!CTX.xemThay })).join('')
         : '<div class="ns-empty"><div class="ns-empty-icon">🧾</div><div class="ns-empty-title">Tháng này chưa có phiếu</div></div>';
 }
 
@@ -142,7 +144,7 @@ async function batDau() {
     st.thang = d.thang || [];
     if (!st.thang.length) {
         view.innerHTML = `${thanhXemThay()}<div class="ns-empty" style="padding-top:2.5rem"><div class="ns-empty-icon">🧾</div>
-            <div class="ns-empty-title">Chưa có phiếu lương nào</div>
+            <div class="ns-empty-title">Chưa có phiếu lương nào${CTX.xemThay ? ' (kể cả tạm tính)' : ''}</div>
             <div>Phiếu lương hiện ở đây sau khi phòng lương duyệt.</div></div>`;
         view.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
         return;

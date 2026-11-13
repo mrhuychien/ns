@@ -11,7 +11,7 @@ const so = (n) => formatNumber(Math.round(n || 0));
 const dong = (n) => `${so(n)} đ`;
 const ngayThang = (iso) => (iso ? `${String(iso).slice(8, 10)}/${String(iso).slice(5, 7)}` : '');
 
-/** Nhãn trạng thái. Công nhân thấy phiếu nháp (khi HR bật) là "Tạm tính" — số còn đổi được. */
+/** Nhãn trạng thái. Trang công nhân gọi phiếu nháp là "Tạm tính" — số còn đổi được. */
 export function nhanTrangThai(p, { congNhan = false } = {}) {
     if (p.docstatus === 2) return '<span class="ns-badge ns-badge-danger">Đã huỷ</span>';
     if (p.docstatus === 1) return '<span class="ns-badge ns-badge-success">Đã duyệt</span>';
@@ -59,9 +59,11 @@ function bangChamCong(ngay) {
  * HTML một phiếu lương.
  * @param p view model (ns.api.phieu_luong.xem_doc)
  * @param opts.congNhan  trang công nhân: nháp gọi là "Tạm tính" + dòng nhắc
+ * @param opts.xemThay   phòng nhân sự đang xem như công nhân: phiếu tạm tính công nhân CHƯA thấy (p.cong_nhan_thay
+ *                       === false) được ghi rõ — HR thấy cả phiếu tạm tính, công nhân chỉ thấy phiếu đã duyệt
  * @param opts.hienTen   ghi tên người trên đầu phiếu (modal của bảng lương)
  */
-export function phieuLuongHtml(p, { congNhan = false, hienTen = false } = {}) {
+export function phieuLuongHtml(p, { congNhan = false, hienTen = false, xemThay = false } = {}) {
     const khoan = p.loai === 'khoan';
     const congChu = p.ngay_san_xuat ? `${formatNumber(p.ngay_cong, 2)}/${formatNumber(p.ngay_san_xuat, 2)}` : formatNumber(p.ngay_cong, 2);
     const tong = [
@@ -105,7 +107,8 @@ export function phieuLuongHtml(p, { congNhan = false, hienTen = false } = {}) {
                 ${hienTen ? `<div class="ns-pl-phu">${esc(p.ten || '')} · ${esc(p.employee || '')}</div>` : ''}</div>
             <div class="ns-pl-nhan-tt">${nhanTrangThai(p, { congNhan })}${!khoan && p.trang_thai ? ` <span class="ns-badge ns-badge-muted">${esc(p.trang_thai)}</span>` : ''}</div>
         </div>
-        ${congNhan && p.docstatus === 0 ? '<div class="ns-risk-bar ns-warn-bar ns-pl-bao"><span>Phiếu chưa duyệt — số đang <b>tạm tính</b>, còn có thể thay đổi.</span></div>' : ''}
+        ${congNhan && p.docstatus === 0 ? `<div class="ns-risk-bar ns-warn-bar ns-pl-bao"><span>Phiếu chưa duyệt — số đang <b>tạm tính</b>, còn có thể thay đổi.${
+    xemThay && p.cong_nhan_thay === false ? ' Công nhân <b>chưa thấy</b> phiếu này — chỉ hiện với công nhân sau khi duyệt.' : ''}</span></div>` : ''}
         ${p.chua_gia ? `<div class="ns-risk-bar ns-warn-bar ns-pl-bao"><span>⚠ ${p.chua_gia} dòng sản phẩm chưa có đơn giá (đang tính 0 đồng)${congNhan ? ' — phòng lương đang cập nhật.' : ' — chưa duyệt được.'}</span></div>` : ''}
         <div class="ns-pl-tong">${tong}</div>
         <div class="ns-pl-muc">Các khoản</div><div class="ns-pl-list">${cacKhoan}</div>

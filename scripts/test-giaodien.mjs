@@ -190,6 +190,29 @@ try {
         const x = (await goi()).slice(truoc).filter((g) => g.user === 'ql@x' && g.method.startsWith('ns.api.cong_nhan.'));
         kiem('… server được hỏi đúng mã chủ thẻ', x.length >= 2 && x.every((g) => g.args.employee === 'HR-EMP-00001'), JSON.stringify(x.map((g) => g.args)));
         kiem('… vừa màn 360px', (await tranNgang(p)) <= 0);
+        // Nhân sự xem thay thấy CẢ phiếu tạm tính (T12 nháp) — công nhân tự xem thì không (kiểm ở phần An bên trên)
+        const optsHr = await p.$$eval('#cn-chon option', (o) => o.map((x) => x.textContent));
+        kiem('nhân sự xem thay: có cả tháng TẠM TÍNH (T12 nháp), mặc định mở tháng mới nhất', JSON.stringify(optsHr)
+            === JSON.stringify(['Tạm tính T12/2026', 'Tháng 11/2026', 'Tháng 10/2026'])
+            && (await p.$eval('#cn-chon', (s) => s.selectedIndex)) === 0, JSON.stringify(optsHr));
+        const t12 = gon(await p.textContent('#cn-phieu'));
+        kiem('… phiếu tạm tính: nhãn Tạm tính + ghi rõ công nhân CHƯA thấy (chỉ thấy sau khi duyệt)',
+            gon(await p.textContent('.ns-pl-nhan-tt')) === 'Tạm tính' && t12.includes('Công nhân chưa thấy phiếu này')
+            && t12.includes('1.000.000 đ'), t12.slice(0, 300));
+        kiem('… thanh báo nói có cả phiếu tạm tính', bar.includes('có cả phiếu tạm tính'), bar);
+        const chu = await p.$eval('#cn-chon', (s) => {
+            const c = document.createElement('canvas').getContext('2d');
+            const cs = getComputedStyle(s);
+            c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+            const vung = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 20;   // chừa mũi tên
+            return { rong: Math.ceil(c.measureText(s.selectedOptions[0].textContent).width), vung: Math.floor(vung) };
+        });
+        kiem('… nhãn tháng tạm tính vừa ô chọn tháng ở 360px (không bị cắt chữ)', chu.rong <= chu.vung, JSON.stringify(chu));
+        await chup(p, 'hr-quet-the-tam-tinh');
+        await p.click('#cn-lui');
+        await p.waitForFunction(() => document.querySelector('.ns-pl-tong-chinh b')?.textContent.includes('15.822.400'));
+        kiem('… sang T11 (đã duyệt): nhãn Đã duyệt, không có dòng "công nhân chưa thấy"',
+            gon(await p.textContent('.ns-pl-nhan-tt')) === 'Đã duyệt' && !gon(await p.textContent('#cn-phieu')).includes('chưa thấy'));
         await chup(p, 'hr-quet-the');
         await Promise.all([p.waitForURL(/\/login\?redirect-to=%2Fphieuluong%3Fthe%3DHR-EMP-00001$/), p.click('.ns-cn-the [data-cn-dang-xuat]')]);
         kiem('… nút "Đăng xuất để thử đăng nhập bằng thẻ": đăng xuất rồi quay lại ĐÚNG thẻ sau khi đăng nhập',

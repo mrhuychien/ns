@@ -122,8 +122,30 @@ print("\n-- phòng nhân sự xem như công nhân --")
 F.dang_nhap("hr@x")
 kiem("HR không truyền mã → tài khoản HR không gắn hồ sơ → chặn", "PermissionError" in (loi(lambda: CN.cac_thang()) or ""))
 t = CN.cac_thang(employee="HR-EMP-1")
-kiem("HR truyền mã → thấy ĐÚNG như công nhân (chỉ phiếu đã duyệt), xem_thay=True",
-     [x["thang"] for x in t["thang"]] == [9, 8] and t["xem_thay"], str(t))
+kiem("HR xem thay → thấy cả tháng chỉ có phiếu TẠM TÍNH (T10 nháp), mới nhất trước, xem_thay=True",
+     [x["thang"] for x in t["thang"]] == [10, 9, 8] and t["xem_thay"], str(t))
+kiem("… tháng tạm tính đánh dấu tam_tinh + công nhân CHƯA thấy; tháng đã duyệt công nhân thấy",
+     (t["thang"][0]["tam_tinh"], t["thang"][0]["cong_nhan_thay"]) == (True, False)
+     and all(x["cong_nhan_thay"] and not x["tam_tinh"] for x in t["thang"][1:]), str(t["thang"]))
+p10 = CN.phieu(10, 2026, employee="HR-EMP-1")["phieu"]
+kiem("… mở phiếu tạm tính T10: docstatus 0, ghi rõ công nhân chưa thấy",
+     [(x["name"], x["docstatus"], x["cong_nhan_thay"]) for x in p10] == [("PL-2026-10-HR-EMP-1", 0, False)], str(p10))
+kiem("… phiếu đã duyệt: công nhân thấy", all(x["cong_nhan_thay"] for x in CN.phieu(9, 2026, employee="HR-EMP-1")["phieu"]))
+kiem("… phiếu ĐÃ HUỶ vẫn không bao giờ hiện, kể cả với HR", CN.phieu(7, 2026, employee="HR-EMP-1")["phieu"] == [])
+t = CN.cac_thang(employee="HR-EMP-2")
+kiem("… công nhật: SalaryDay nháp T10 cũng hiện với HR (như ở /ns), công nhân chưa thấy",
+     [(x["thang"], x["tam_tinh"], x["cong_nhan_thay"]) for x in t["thang"]] == [(10, True, False), (9, False, True)],
+     str(t["thang"]))
+F.CONF["ns_cong_nhan_xem_nhap"] = 1
+kiem("bật cho công nhân xem nháp → phiếu khoán tạm tính ghi 'công nhân thấy'",
+     [x["cong_nhan_thay"] for x in CN.phieu(10, 2026, employee="HR-EMP-1")["phieu"]] == [True])
+kiem("… SalaryDay nháp vẫn 'công nhân chưa thấy' khi P1 chưa bật",
+     [x["cong_nhan_thay"] for x in CN.phieu(10, 2026, employee="HR-EMP-2")["phieu"]] == [False])
+F.CONF.clear()
+F.dang_nhap("an@x")
+kiem("công nhân tự xem KHÔNG đổi: vẫn không thấy tháng tạm tính T10",
+     [x["thang"] for x in CN.cac_thang()["thang"]] == [9, 8] and CN.phieu(10, 2026)["phieu"] == [])
+F.dang_nhap("hr@x")
 kiem("HR truyền mã không có → DoesNotExistError", "DoesNotExist" in (loi(lambda: CN.phieu(9, 2026, employee="X")) or ""))
 
 print("\n-- site chưa migrate field ns_tai_khoan --")

@@ -154,7 +154,7 @@ Công nhân quét QR → đăng nhập SĐT + mật khẩu → vào thẳng phi�
 | Tài khoản dùng chung | (QC có tài khoản sx, văn phòng có Desk) chỉ **Gắn / Gỡ**; cấp lại mật khẩu / khoá chỉ với tài khoản riêng của app (mọi role ⊆ {NS Cong Nhan}) — không bao giờ đụng Administrator / tài khoản khác |
 | Công nhân thấy gì | Chỉ hồ sơ gắn với **phiên đăng nhập** (trình duyệt không gửi mã nhân viên); tài khoản khoá / chưa gắn → chặn. Mặc định chỉ phiếu **đã duyệt**; phiếu huỷ không bao giờ |
 | Xem phiếu nháp (tuỳ chọn) | `bench --site site1.local set-config ns_cong_nhan_xem_nhap 1` → hiện thêm phiếu nháp, ghi **Tạm tính**. SalaryDay nháp chỉ hiện khi P1 đã bật (`ns_tinh_lai_salaryday = 1`) — trước P1 số nháp chỉ đúng sau khi kế toán Save trên Desk |
-| Xem như công nhân | HR (HR User trở lên) mở `/phieuluong?nv=<mã NV>` (nút 👁 ở `#/tai-khoan` và hồ sơ) — thấy đúng màn công nhân đang thấy; người không phải HR thêm `?nv=` thì bị bỏ qua |
+| Xem như công nhân | HR (HR User trở lên) mở `/phieuluong?nv=<mã NV>` (nút 👁 ở `#/tai-khoan` và hồ sơ) hoặc quét thẻ — thấy màn công nhân đang thấy **và cả phiếu tạm tính** (chưa duyệt, như ở `/ns`): tháng tạm tính ghi *Tạm tính T12/2026*, phiếu ghi rõ **"Công nhân chưa thấy phiếu này — chỉ hiện với công nhân sau khi duyệt"** (trừ khi đã bật cho công nhân xem nháp). Người không phải HR thêm `?nv=` thì bị bỏ qua |
 | Quyền màn Tài khoản | Xem: HR User / HR Manager / System Manager. Tạo / cấp lại / khoá / gỡ: **HR Manager / System Manager** |
 | Gỡ | Hết xem lương ngay; tài khoản riêng bị khoá luôn (không để tài khoản mồ côi), tài khoản dùng chung chỉ bỏ role NS |
 
@@ -170,7 +170,7 @@ mình; trước bản này ra "Tài khoản chưa gắn với hồ sơ nhân vi�
 |---|---|
 | chưa đăng nhập | trang đăng nhập → đăng nhập xong **quay lại đúng thẻ** (`redirect-to` giữ `?the=`) |
 | chính X | phiếu lương của X |
-| tài khoản phòng nhân sự | phiếu của X ở chế độ **xem như công nhân** + thanh "Thẻ của X…" + nút **Đăng xuất để thử đăng nhập bằng thẻ** |
+| tài khoản phòng nhân sự | phiếu của X ở chế độ **xem như công nhân** — có cả phiếu tạm tính — + thanh "Thẻ của X…" + nút **Đăng xuất để thử đăng nhập bằng thẻ** |
 | người khác (không phải HR) | "Thẻ này không phải của tài khoản đang đăng nhập" + tên tài khoản đang đăng nhập + nút **Đăng xuất để đăng nhập bằng thẻ này** — không tải phiếu nào, không nói thẻ của ai (mã trên địa chỉ ai cũng gõ được) |
 
 Thẻ in trước bản này (QR là `/phieuluong` trơn) vẫn dùng bình thường trên máy công nhân; quét trên máy đang đăng nhập
