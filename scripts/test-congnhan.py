@@ -136,9 +136,9 @@ del F.META_FIELDS["Employee"]
 print("\n-- trang /phieuluong --")
 
 
-def trang(user, nv=None):
+def trang(user, nv=None, the=None):
     F.dang_nhap(user)
-    F.sys.modules["frappe"].form_dict = F.Doc({"nv": nv} if nv else {})
+    F.sys.modules["frappe"].form_dict = F.Doc({k: v for k, v in (("nv", nv), ("the", the)) if v})
     F.sys.modules["frappe"].local.flags.redirect_location = None
     ctx = F.Doc()
     try:
@@ -149,7 +149,10 @@ def trang(user, nv=None):
 
 
 ctx, di = trang("Guest")
-kiem("Guest → chuyển tới đăng nhập, quay lại đúng /phieuluong", ctx is None and di == "/login?redirect-to=/phieuluong", di)
+kiem("Guest → chuyển tới đăng nhập, quay lại đúng /phieuluong", ctx is None and di == "/login?redirect-to=%2Fphieuluong", di)
+ctx, di = trang("Guest", the="HR-EMP-1")
+kiem("Guest quét thẻ → đăng nhập xong quay lại ĐÚNG thẻ (?the= giữ nguyên)",
+     ctx is None and di == "/login?redirect-to=%2Fphieuluong%3Fthe%3DHR-EMP-1", di)
 ctx, _di = trang("an@x")
 kiem("công nhân: context mang đúng hồ sơ của mình", ctx.cn_context["employee"] == "HR-EMP-1" and ctx.co_nhan_vien
      and not ctx.cn_context["xemThay"])
@@ -162,6 +165,29 @@ ctx, _di = trang("hr@x", nv="HR-EMP-2")
 kiem("HR ?nv= → xem như công nhân", ctx.cn_context["employee"] == "HR-EMP-2" and ctx.cn_context["xemThay"])
 ctx, _di = trang("hr@x", nv="KHONG-CO")
 kiem("HR ?nv= mã không có → không vỡ, coi như không xem thay", not ctx.co_nhan_vien)
+
+print("\n-- quét thẻ (?the=) khi máy đang đăng nhập sẵn --")
+ctx, _di = trang("an@x", the="HR-EMP-1")
+kiem("chủ thẻ quét thẻ của mình → xem phiếu của mình", ctx.co_nhan_vien and ctx.cn_context["employee"] == "HR-EMP-1"
+     and not ctx.the_khac and not ctx.cn_context["xemThay"])
+ctx, _di = trang("an@x", the="HR-EMP-2")
+kiem("công nhân quét thẻ của NGƯỜI KHÁC → báo 'thẻ không phải của tài khoản đang đăng nhập', không tải phiếu nào",
+     ctx.the_khac and not ctx.co_nhan_vien and ctx.cn_context["employee"] is None)
+kiem("… không lộ tên / bộ phận chủ thẻ (mã trên địa chỉ ai cũng gõ được)",
+     "Trần Văn Bình" not in str(ctx) and ctx.cn_context["employeeName"] is None and ctx.co_ho_so_rieng)
+kiem("… ghi rõ tài khoản đang đăng nhập", ctx.ten_tk == "an@x" or ctx.ten_tk == F.DB["User"]["an@x"]["full_name"])
+ctx, _di = trang("lac@x", the="HR-EMP-1")
+kiem("tài khoản chưa gắn hồ sơ quét thẻ → cũng báo thẻ người khác, không có lối 'phiếu của tôi'",
+     ctx.the_khac and not ctx.co_nhan_vien and not ctx.co_ho_so_rieng)
+ctx, _di = trang("hr@x", the="HR-EMP-2")
+kiem("phòng nhân sự quét thẻ → xem như công nhân ĐÚNG chủ thẻ, đánh dấu 'từ thẻ' (hiện nút đăng xuất để thử thẻ)",
+     ctx.co_nhan_vien and ctx.cn_context["employee"] == "HR-EMP-2" and ctx.cn_context["xemThay"]
+     and ctx.cn_context["tuThe"] and not ctx.the_khac)
+ctx, _di = trang("hr@x", nv="HR-EMP-2")
+kiem("… nút 👁 (?nv=) vẫn là xem thay, không phải 'từ thẻ'", ctx.cn_context["xemThay"] and not ctx.cn_context["tuThe"])
+ctx, _di = trang("hr@x")
+kiem("phòng nhân sự mở trang trơn (QR thẻ in trước đây) → màn báo tài khoản phòng nhân sự, không phải lỗi",
+     not ctx.co_nhan_vien and not ctx.the_khac and ctx.la_hr)
 src = open(os.path.join(F.GOC, "ns", "www", "phieuluong.py"), encoding="utf-8").read()
 js = open(os.path.join(F.GOC, "ns", "public", "ns", "cong_nhan.js"), encoding="utf-8").read()
 import re  # noqa: E402

@@ -31,8 +31,10 @@ Nghiệm thu nhanh: mở `https://a.rongvanghoanggia.com/ns` bằng user có rol
 "Không có quyền"; gọi thẳng API → `PermissionError`. Guest → chuyển về `/login?redirect-to=/ns`.
 
 Nghiệm thu phiếu lương công nhân: HR Manager vào `/ns#/tai-khoan` → **＋ Tạo tài khoản** cho 1 công nhân → **In thẻ**
-→ trên điện thoại quét QR (hoặc mở `/phieuluong`) → đăng nhập SĐT + mật khẩu trên thẻ → thấy đúng phiếu đã duyệt của
-người đó, không có tháng còn nháp; sửa địa chỉ thành `/phieuluong?nv=<mã người khác>` → vẫn chỉ là phiếu của mình.
+→ quét QR bằng điện thoại. Máy đang đăng nhập tài khoản phòng nhân sự thì thấy phiếu của chủ thẻ ở chế độ *xem như
+công nhân* → bấm **Đăng xuất để thử đăng nhập bằng thẻ** → đăng nhập SĐT + mật khẩu trên thẻ → quay lại đúng thẻ, thấy
+phiếu đã duyệt của người đó, không có tháng còn nháp; sửa địa chỉ thành `/phieuluong?nv=<mã người khác>` → vẫn chỉ là
+phiếu của mình.
 
 ## Cấu trúc
 
@@ -156,9 +158,23 @@ Công nhân quét QR → đăng nhập SĐT + mật khẩu → vào thẳng phi�
 | Quyền màn Tài khoản | Xem: HR User / HR Manager / System Manager. Tạo / cấp lại / khoá / gỡ: **HR Manager / System Manager** |
 | Gỡ | Hết xem lương ngay; tài khoản riêng bị khoá luôn (không để tài khoản mồ côi), tài khoản dùng chung chỉ bỏ role NS |
 
-QR trên thẻ **chỉ chứa địa chỉ trang** (không phải mã đăng nhập một lần như thẻ QC của sx) — người nhặt được thẻ vẫn
-cần mật khẩu, nhưng mật khẩu in ngay trên thẻ nên vẫn dặn giữ thẻ như chìa khoá. HR cấp lại mật khẩu thì Frappe gửi
-thông báo "mật khẩu đã đổi" tới email giả (không ai nhận) — đúng như tài khoản sx.
+QR trên thẻ chứa **địa chỉ trang + mã NV chủ thẻ** — `/phieuluong?the=<mã NV>` (không phải mã đăng nhập một lần như
+thẻ QC của sx; chữ in trên thẻ vẫn là địa chỉ ngắn `…/phieuluong` để gõ tay). Người nhặt được thẻ vẫn cần mật khẩu,
+nhưng mật khẩu in ngay trên thẻ nên vẫn dặn giữ thẻ như chìa khoá. HR cấp lại mật khẩu thì Frappe gửi thông báo "mật
+khẩu đã đổi" tới email giả (không ai nhận) — đúng như tài khoản sx.
+
+**Quét thẻ khi điện thoại đang đăng nhập sẵn** (Safari giữ phiên — hay gặp khi phòng nhân sự quét thử thẻ trên máy
+mình; trước bản này ra "Tài khoản chưa gắn với hồ sơ nhân viên"):
+
+| Đang đăng nhập bằng | Quét thẻ của X thì thấy |
+|---|---|
+| chưa đăng nhập | trang đăng nhập → đăng nhập xong **quay lại đúng thẻ** (`redirect-to` giữ `?the=`) |
+| chính X | phiếu lương của X |
+| tài khoản phòng nhân sự | phiếu của X ở chế độ **xem như công nhân** + thanh "Thẻ của X…" + nút **Đăng xuất để thử đăng nhập bằng thẻ** |
+| người khác (không phải HR) | "Thẻ này không phải của tài khoản đang đăng nhập" + tên tài khoản đang đăng nhập + nút **Đăng xuất để đăng nhập bằng thẻ này** — không tải phiếu nào, không nói thẻ của ai (mã trên địa chỉ ai cũng gõ được) |
+
+Thẻ in trước bản này (QR là `/phieuluong` trơn) vẫn dùng bình thường trên máy công nhân; quét trên máy đang đăng nhập
+tài khoản khác thì màn báo ghi rõ **đang đăng nhập bằng tài khoản nào** kèm nút đăng xuất — không cần in lại.
 
 ## Icon NS ngoài trang chủ Desk
 

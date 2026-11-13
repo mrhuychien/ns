@@ -14,6 +14,8 @@ Thấy phiếu nào:
 Không ghi gì. Đọc SalaryDay / SX Phieu Luong bỏ qua quyền DocType SAU KHI đã khoá phạm vi về đúng một nhân viên
 (gotcha #9) — role NS Cong Nhan không có quyền DocType nào.
 """
+from urllib.parse import quote
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt
@@ -23,6 +25,13 @@ from ns.api.phieu import chon_phieu, phieu_khoan, phieu_nhat
 from ns.api.phieu_luong import DT_KHOAN, DT_NHAT, lay_doc, xem_doc
 
 F_TK = "ns_tai_khoan"
+TRANG = "/phieuluong"
+
+
+def dia_chi_the(the=None):
+    """Địa chỉ trang công nhân kèm mã chủ thẻ (?the=) — nằm trong QR của thẻ đăng nhập, và là chỗ quay về sau khi đăng
+    nhập. Không có mã → địa chỉ trơn (thẻ in trước đây)."""
+    return TRANG + (f"?the={quote(the, safe='')}" if the else "")
 
 
 def nhan_vien_cua(user):

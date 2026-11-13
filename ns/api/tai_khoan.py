@@ -36,6 +36,7 @@ from frappe import _
 from frappe.utils import cint, get_url
 
 from ns.api import guard, guard_quan_ly
+from ns.api.cong_nhan import dia_chi_the
 
 ROLE_CN = "NS Cong Nhan"
 F_TK = "ns_tai_khoan"
@@ -182,12 +183,14 @@ def _can_role():
 
 
 def _the(e, user, mat_khau=None, **them):
-    """Dữ liệu một thẻ đăng nhập (màn in thẻ)."""
+    """Dữ liệu một thẻ đăng nhập (màn in thẻ). `url` (ngắn) in thành chữ để gõ tay; `url_qr` nằm trong QR và mang mã
+    chủ thẻ (?the=) — máy đang đăng nhập tài khoản khác thì trang biết thẻ là của ai: phòng nhân sự xem như công nhân,
+    người khác được mời đăng xuất rồi đăng nhập bằng thẻ (xem www/phieuluong.py)."""
     u = frappe.db.get_value("User", user, ["username", "mobile_no", "full_name"], as_dict=True) or {}
     return {
         "employee": e.name, "ten": e.employee_name or e.name, "user": user,
         "sdt": u.get("username") or u.get("mobile_no") or "", "mat_khau": mat_khau,
-        "url": get_url(TRANG_CN), **them,
+        "url": get_url(TRANG_CN), "url_qr": get_url(dia_chi_the(e.name)), **them,
     }
 
 

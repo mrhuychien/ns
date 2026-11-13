@@ -1,7 +1,8 @@
 // In THẺ ĐĂNG NHẬP XEM LƯƠNG cho công nhân — dựng HTML ngay trên máy rồi mở tab in (cách của app sx, D63/D81).
 //
-// Một thẻ: tên + mã NV, QR mở thẳng trang /phieuluong, số điện thoại (tên đăng nhập) và mật khẩu.
-// QR CHỈ chứa địa chỉ trang (không chứa mật khẩu / mã đăng nhập): rơi thẻ ra ngoài thì người nhặt vẫn phải có mật
+// Một thẻ: tên + mã NV, QR mở trang /phieuluong?the=<mã NV> (trang biết thẻ của ai khi máy đang đăng nhập tài khoản
+// khác), địa chỉ ngắn in thành chữ để gõ tay, số điện thoại (tên đăng nhập) và mật khẩu.
+// QR CHỈ chứa địa chỉ trang + mã NV chủ thẻ (không chứa mật khẩu / mã đăng nhập): rơi thẻ ra ngoài thì người nhặt vẫn phải có mật
 // khẩu — nhưng mật khẩu in ngay bên dưới, nên vẫn giữ thẻ như giữ chìa khoá; mất thẻ → HR bấm "Cấp lại".
 // QR vẽ bằng vendor/qrcode.js (MIT) ra SVG: in nét, không cần bật "đồ hoạ nền" (sx D186).
 import qrcode from '../vendor/qrcode.js';
@@ -34,7 +35,7 @@ export function htmlTheDangNhap(ds) {
       <div class="dau">XEM PHIẾU LƯƠNG</div>
       <div class="ten">${esc(e.ten)}</div>
       <div class="ma">${esc(e.employee || '')}</div>
-      ${veQR(e.url, 3)}
+      ${veQR(e.url_qr || e.url, 3)}
       <div class="url">${esc(gonUrl(e.url))}</div>
       <div class="o">
         <div class="nhan">Tên đăng nhập (số điện thoại)</div>

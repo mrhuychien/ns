@@ -5,11 +5,14 @@
 // → công nhân và phòng nhân sự nhìn cùng một con số.
 //
 // Chọn tháng: ‹ › hoặc danh sách; tháng đang xem ghi lên địa chỉ (#2026-10) để tải lại / gửi link vẫn đúng tháng.
+//
+// Thẻ đăng nhập in QR /phieuluong?the=<mã NV chủ thẻ>. Máy hay đang đăng nhập sẵn tài khoản khác (phòng nhân sự quét
+// thử thẻ trên máy mình) → server vẽ màn báo + nút [data-cn-dang-xuat]; đăng xuất xong về /login và quay lại ĐÚNG thẻ.
 import { call } from './lib/api.js';
 import { escapeHtml as esc } from './lib/format.js';
 import { phieuLuongHtml } from './components/phieu_luong.js';
 
-const BUILD = 'ns-cn1'; // PHẢI khớp SHELL_BUILD trong www/phieuluong.py
+const BUILD = 'ns-cn2'; // PHẢI khớp SHELL_BUILD trong www/phieuluong.py
 const CTX = window.NS_CONTEXT || {};
 window.NS_CN = { build: BUILD };
 console.log(`[NS] cong_nhan build=${BUILD}`);
@@ -58,16 +61,31 @@ async function dangXuat() {
         toast('Chưa đăng xuất được — kiểm tra mạng rồi thử lại.');
         return;
     }
-    window.location.href = '/login?redirect-to=%2Fphieuluong';
+    // Quay lại đúng thẻ vừa quét (?the=) sau khi đăng nhập; ?nv= (xem thay của HR) thì không mang theo.
+    const the = new URLSearchParams(location.search).get('the');
+    const ve = `/phieuluong${the ? `?the=${encodeURIComponent(the)}` : ''}`;
+    window.location.href = `/login?redirect-to=${encodeURIComponent(ve)}`;
 }
 const nutMenu = document.getElementById('cn-menu-btn');
 if (nutMenu) nutMenu.onclick = moMenu;
+document.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
 
 // ── khung trang ──
+/** Thanh báo khi phòng nhân sự đang xem thay: quét thẻ (kèm nút đăng xuất để thử đăng nhập bằng thẻ) hoặc nút 👁. */
+function thanhXemThay() {
+    if (!CTX.xemThay) return '';
+    if (CTX.tuThe) {
+        return `<div class="ns-risk-bar ns-info-bar ns-cn-the"><span>Thẻ của <b>${esc(CTX.employeeName)}</b>. Máy đang đăng nhập bằng
+            tài khoản phòng nhân sự (<b>${esc(CTX.full_name || CTX.user)}</b>) nên đang <b>xem như công nhân</b>.</span>
+            <button class="ns-btn ns-btn-sm" data-cn-dang-xuat>Đăng xuất để thử đăng nhập bằng thẻ</button></div>`;
+    }
+    return `<div class="ns-risk-bar ns-info-bar"><span>Phòng nhân sự đang <b>xem như công nhân</b>: ${esc(CTX.employeeName)} · ${esc(CTX.employee)}</span></div>`;
+}
+
 function veKhung() {
     const x = st.thang[st.i];
     view.innerHTML = `
-        ${CTX.xemThay ? `<div class="ns-risk-bar ns-info-bar"><span>Phòng nhân sự đang <b>xem như công nhân</b>: ${esc(CTX.employeeName)} · ${esc(CTX.employee)}</span></div>` : ''}
+        ${thanhXemThay()}
         <div class="ns-cn-chao"><div class="ns-cn-ten">${esc(CTX.employeeName || '')}</div>
             <div class="ns-cn-phu">${esc(CTX.employee || '')}${CTX.department ? ` · ${esc(CTX.department)}` : ''}</div></div>
         <div class="ns-cn-thang">
@@ -77,6 +95,7 @@ function veKhung() {
         </div>
         <div id="cn-phieu" class="ns-card ns-cn-phieu" aria-live="polite"><div class="ns-skeleton" style="height:220px"></div></div>
         <div class="ns-cn-chan">Thắc mắc về lương: liên hệ phòng nhân sự. Phiếu chỉ hiện sau khi phòng lương duyệt.</div>`;
+    view.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
     view.querySelector('#cn-lui').onclick = () => chon(st.i + 1);
     view.querySelector('#cn-toi').onclick = () => chon(st.i - 1);
     view.querySelector('#cn-chon').onchange = (e) => chon(Number(e.target.value));
@@ -115,15 +134,17 @@ async function batDau() {
     try {
         d = await call('ns.api.cong_nhan.cac_thang', thamSo());
     } catch (e) {
-        view.innerHTML = `<div class="ns-risk-bar">${esc(e.message)}</div>`;
+        view.innerHTML = `${thanhXemThay()}<div class="ns-risk-bar">${esc(e.message)}</div>`;
+        view.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
         return;
     }
     st.info = d;
     st.thang = d.thang || [];
     if (!st.thang.length) {
-        view.innerHTML = `<div class="ns-empty" style="padding-top:2.5rem"><div class="ns-empty-icon">🧾</div>
+        view.innerHTML = `${thanhXemThay()}<div class="ns-empty" style="padding-top:2.5rem"><div class="ns-empty-icon">🧾</div>
             <div class="ns-empty-title">Chưa có phiếu lương nào</div>
             <div>Phiếu lương hiện ở đây sau khi phòng lương duyệt.</div></div>`;
+        view.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
         return;
     }
     const h = location.hash.replace('#', '');

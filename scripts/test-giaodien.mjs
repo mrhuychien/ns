@@ -66,7 +66,10 @@ try {
         const { ctx, p } = await moTrang(null);
         await p.goto(`${GOCURL}/phieuluong`, { waitUntil: 'domcontentloaded' });
         kiem('chưa đăng nhập → trang đăng nhập, quay lại đúng /phieuluong',
-            p.url().endsWith('/login?redirect-to=/phieuluong') && !!(await p.$('#login')), p.url());
+            p.url().endsWith('/login?redirect-to=%2Fphieuluong') && !!(await p.$('#login')), p.url());
+        await p.goto(`${GOCURL}/phieuluong?the=HR-EMP-00001`, { waitUntil: 'domcontentloaded' });
+        kiem('chưa đăng nhập quét thẻ → đăng nhập xong quay lại ĐÚNG thẻ (?the= giữ nguyên)',
+            p.url().endsWith('/login?redirect-to=%2Fphieuluong%3Fthe%3DHR-EMP-00001'), p.url());
         await ctx.close();
     }
 
@@ -174,6 +177,60 @@ try {
         await ctx.close();
     }
 
+    console.log('\n-- quét thẻ khi điện thoại đang đăng nhập sẵn tài khoản khác --');
+    {
+        // Phòng nhân sự quét thử thẻ của An trên máy mình (ảnh người dùng gửi: ra "chưa gắn hồ sơ")
+        const { ctx, p } = await moTrang('ql@x');
+        const truoc = (await goi()).length;
+        await p.goto(`${GOCURL}/phieuluong?the=HR-EMP-00001`, { waitUntil: 'domcontentloaded' });
+        await p.waitForSelector('#cn-phieu .ns-pl');
+        const bar = gon(await p.textContent('.ns-cn-the'));
+        kiem('HR quét thẻ → xem như công nhân ĐÚNG chủ thẻ (phiếu của An), thanh báo ghi tài khoản đang đăng nhập',
+            bar.includes('Thẻ của Nguyễn Thị An') && bar.includes('Chị Quản Lý') && gon(await p.textContent('.ns-cn-chao')).startsWith('Nguyễn Thị An'), bar);
+        const x = (await goi()).slice(truoc).filter((g) => g.user === 'ql@x' && g.method.startsWith('ns.api.cong_nhan.'));
+        kiem('… server được hỏi đúng mã chủ thẻ', x.length >= 2 && x.every((g) => g.args.employee === 'HR-EMP-00001'), JSON.stringify(x.map((g) => g.args)));
+        kiem('… vừa màn 360px', (await tranNgang(p)) <= 0);
+        await chup(p, 'hr-quet-the');
+        await Promise.all([p.waitForURL(/\/login\?redirect-to=%2Fphieuluong%3Fthe%3DHR-EMP-00001$/), p.click('.ns-cn-the [data-cn-dang-xuat]')]);
+        kiem('… nút "Đăng xuất để thử đăng nhập bằng thẻ": đăng xuất rồi quay lại ĐÚNG thẻ sau khi đăng nhập',
+            (await goi()).some((g) => g.method === 'logout' && g.user === 'ql@x' && g.csrf === 'csrf-test'));
+        await ctx.close();
+    }
+    {
+        // Công nhân Bình cầm nhầm / quét thẻ của An trên máy mình
+        const { ctx, p } = await moTrang('binh@x');
+        const truoc = (await goi()).length;
+        await p.goto(`${GOCURL}/phieuluong?the=HR-EMP-00001`, { waitUntil: 'domcontentloaded' });
+        await p.waitForSelector('#cn-the-khac');
+        await p.waitForTimeout(300);
+        const txt = gon(await p.textContent('.ns-cn-main'));
+        kiem('công nhân quét thẻ người khác → báo thẻ không phải của tài khoản đang đăng nhập + tên tài khoản đang đăng nhập',
+            txt.includes('Thẻ này không phải của tài khoản đang đăng nhập') && txt.includes('Trần Văn Bình'), txt);
+        kiem('… KHÔNG lộ phiếu / tên chủ thẻ, KHÔNG gọi API lương', !(await p.$('.ns-pl')) && !txt.includes('Nguyễn Thị An')
+            && !(await goi()).slice(truoc).some((g) => g.user === 'binh@x' && g.method.startsWith('ns.api.cong_nhan')));
+        kiem('… có lối xem phiếu của chính mình', (await p.getAttribute('#cn-the-khac a', 'href')) === '/phieuluong');
+        await chup(p, 'cn-the-khac');
+        await Promise.all([p.waitForURL(/\/login\?redirect-to=%2Fphieuluong%3Fthe%3DHR-EMP-00001$/), p.click('#cn-the-khac [data-cn-dang-xuat]')]);
+        kiem('… nút đăng xuất to: đăng xuất rồi đăng nhập bằng thẻ (quay lại đúng thẻ)',
+            (await goi()).some((g) => g.method === 'logout' && g.user === 'binh@x'));
+        await ctx.close();
+    }
+    {
+        // Thẻ in trước đây (QR không có ?the=) quét trên máy đang đăng nhập phòng nhân sự
+        const { ctx, p } = await moTrang('ql@x');
+        await p.goto(`${GOCURL}/phieuluong`, { waitUntil: 'domcontentloaded' });
+        await p.waitForSelector('#cn-chua-gan');
+        await p.waitForTimeout(300);
+        const txt = gon(await p.textContent('#cn-chua-gan'));
+        kiem('thẻ cũ + máy đăng nhập phòng nhân sự → nói rõ đang đăng nhập tài khoản nào, có nút đăng xuất để đăng nhập công nhân',
+            txt.includes('Máy đang đăng nhập bằng tài khoản phòng nhân sự') && txt.includes('Chị Quản Lý')
+            && !!(await p.$('#cn-chua-gan [data-cn-dang-xuat]')), txt);
+        await chup(p, 'hr-the-cu');
+        await Promise.all([p.waitForURL(/\/login\?redirect-to=%2Fphieuluong$/), p.click('#cn-chua-gan [data-cn-dang-xuat]')]);
+        kiem('… bấm là đăng xuất, về trang đăng nhập', p.url().endsWith('/login?redirect-to=%2Fphieuluong'));
+        await ctx.close();
+    }
+
     console.log('\n-- phòng nhân sự: màn Tài khoản (HR Manager) --');
     await seed();
     {
@@ -199,6 +256,14 @@ try {
         const theTxt = gon(await the.textContent('body'));
         kiem('in thẻ: QR (SVG) + SĐT + mật khẩu + địa chỉ /phieuluong', !!(await the.$('svg.qr path'))
             && theTxt.includes('0901234567') && theTxt.includes(mk) && theTxt.includes('/phieuluong'), theTxt.slice(0, 300));
+        const qr = await the.$eval('svg.qr path', (x) => x.getAttribute('d'));
+        const mongDoi = await p.evaluate(async () => {
+            const m = await import('/assets/ns/ns/lib/inthe.js');
+            const d = (u) => m.veQR(u, 3).match(/<path d="([^"]+)"/)[1];
+            return { coThe: d('https://a.example.vn/phieuluong?the=HR-EMP-00003'), tron: d('https://a.example.vn/phieuluong') };
+        });
+        kiem('… QR mã hoá đúng /phieuluong?the=<mã NV chủ thẻ> (không phải địa chỉ trơn)', qr === mongDoi.coThe && qr !== mongDoi.tron);
+        kiem('… chữ in trên thẻ vẫn là địa chỉ ngắn để gõ tay', theTxt.includes('a.example.vn/phieuluong') && !theTxt.includes('the='));
         if (SHOT) await the.screenshot({ path: join(SHOT, 'the-dang-nhap.png') });
         await the.close();
         await p.click('.ns-modal-content [data-ns-close]');

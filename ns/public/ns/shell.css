@@ -306,3 +306,9 @@ body > .web-footer, body > footer, .navbar.navbar-light, .page-footer { display:
 .ns-tk-acc { flex: 1 1 160px; font-size: .8rem; }
 .ns-tk-row .ns-actions { margin-left: auto; }
 .ns-tk-mk { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; }
+
+/* ── Trang công nhân: màn báo (thẻ của người khác / chưa gắn hồ sơ) + nút đăng xuất để đăng nhập bằng thẻ ── */
+.ns-cn-bao { padding-top: 2.5rem; gap: .7rem; color: var(--ns-text-2); }
+.ns-cn-bao b { color: var(--ns-text); }
+.ns-cn-nut { min-height: 48px; font-size: 1rem; padding: .7rem 1.2rem; margin-top: .3rem; width: 100%; max-width: 360px; white-space: normal; }
+.ns-cn-the { align-items: center; }

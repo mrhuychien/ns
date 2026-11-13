@@ -35,15 +35,33 @@ window.NS_CONTEXT = {{ cn_context | tojson }};
     </div>
   </div></header>
   <main class="ns-main ns-cn-main">
-    {% if not co_nhan_vien %}
-    <div class="ns-empty" style="padding-top:3rem">
+    {# Máy hay đang đăng nhập sẵn tài khoản khác (vd. phòng nhân sự quét thử thẻ trên máy mình): màn nào cũng ghi rõ
+       tài khoản đang đăng nhập + nút đăng xuất (cong_nhan.js gắn [data-cn-dang-xuat], quay về đúng thẻ sau đăng nhập). #}
+    {% if the_khac %}
+    <div class="ns-empty ns-cn-bao" id="cn-the-khac">
+      <div class="ns-empty-icon">🔄</div>
+      <div class="ns-empty-title">Thẻ này không phải của tài khoản đang đăng nhập</div>
+      <div>Máy đang đăng nhập bằng <b>{{ ten_tk | e }}</b> ({{ frappe.session.user | e }}).<br>
+        Đăng xuất rồi đăng nhập bằng <b>số điện thoại + mật khẩu in trên thẻ</b>.</div>
+      <button class="ns-btn ns-btn-primary ns-cn-nut" data-cn-dang-xuat>Đăng xuất để đăng nhập bằng thẻ này</button>
+      {% if co_ho_so_rieng %}<a class="ns-link" href="/phieuluong">Xem phiếu lương của tôi</a>{% endif %}
+    </div>
+    {% elif not co_nhan_vien %}
+    <div class="ns-empty ns-cn-bao" id="cn-chua-gan">
       <div class="ns-empty-icon">🔒</div>
-      <div class="ns-empty-title">Tài khoản chưa gắn với hồ sơ nhân viên</div>
       {% if la_hr %}
-      <div>Bạn là phòng nhân sự: cấp tài khoản cho công nhân ở <a class="ns-link" href="/ns#/tai-khoan">Nhân sự → Tài khoản</a>,
-        hoặc xem đúng màn của một công nhân bằng <b>/phieuluong?nv=&lt;mã NV&gt;</b>.</div>
+      <div class="ns-empty-title">Máy đang đăng nhập bằng tài khoản phòng nhân sự</div>
+      <div>Đang đăng nhập: <b>{{ ten_tk | e }}</b> ({{ frappe.session.user | e }}).<br>
+        Trang này để công nhân xem phiếu lương của chính mình. Muốn thử thẻ của công nhân: đăng xuất rồi đăng nhập
+        bằng <b>số điện thoại + mật khẩu in trên thẻ</b>.</div>
+      <button class="ns-btn ns-btn-primary ns-cn-nut" data-cn-dang-xuat>Đăng xuất để đăng nhập tài khoản công nhân</button>
+      <div class="ns-text-sm">Cấp tài khoản: <a class="ns-link" href="/ns#/tai-khoan">Nhân sự → Tài khoản</a> · xem như
+        công nhân: nút 👁 ở màn Tài khoản</div>
       {% else %}
-      <div>Tài khoản <b>{{ frappe.session.user }}</b> chưa được gắn với hồ sơ của bạn.<br>Liên hệ phòng nhân sự để được cấp.</div>
+      <div class="ns-empty-title">Tài khoản chưa gắn với hồ sơ nhân viên</div>
+      <div>Đang đăng nhập: <b>{{ ten_tk | e }}</b> ({{ frappe.session.user | e }}) — tài khoản này chưa được gắn với hồ sơ
+        của bạn.<br>Liên hệ phòng nhân sự, hoặc đăng xuất để đăng nhập tài khoản khác.</div>
+      <button class="ns-btn ns-btn-primary ns-cn-nut" data-cn-dang-xuat>Đăng xuất</button>
       {% endif %}
     </div>
     {% else %}

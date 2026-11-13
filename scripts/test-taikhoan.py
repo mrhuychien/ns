@@ -119,6 +119,8 @@ kiem("gắn qua Employee.ns_tai_khoan, KHÔNG đụng user_id (tránh role Emplo
      F.DB["Employee"]["HR-EMP-1"]["ns_tai_khoan"] == r["user"] and not F.DB["Employee"]["HR-EMP-1"].get("user_id"))
 kiem("thẻ: tên, mã NV, SĐT, đường dẫn /phieuluong", (r["ten"], r["employee"], r["sdt"], r["url"])
      == ("Nguyễn Thị An", "HR-EMP-1", "0912345678", "https://a.example.vn/phieuluong"), str(r))
+kiem("… QR mang mã chủ thẻ (?the=) để trang biết thẻ của ai khi máy đang đăng nhập tài khoản khác",
+     r["url_qr"] == "https://a.example.vn/phieuluong?the=HR-EMP-1", r.get("url_qr"))
 F.dang_nhap("0912345678@sx.local")
 kiem("… đăng nhập tài khoản mới là thấy đúng hồ sơ của mình", CN.cac_thang()["employee"] == "HR-EMP-1")
 F.dang_nhap("ql@x")
