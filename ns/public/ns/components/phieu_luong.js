@@ -108,6 +108,7 @@ export function phieuLuongHtml(p, { congNhan = false, hienTen = false, xemThay =
             <div class="ns-pl-nhan-tt">${nhanTrangThai(p, { congNhan })}${!khoan && p.trang_thai ? ` <span class="ns-badge ns-badge-muted">${esc(p.trang_thai)}</span>` : ''}</div>
         </div>
         ${congNhan && p.docstatus === 0 ? `<div class="ns-risk-bar ns-warn-bar ns-pl-bao"><span>Phiếu chưa duyệt — số đang <b>tạm tính</b>, còn có thể thay đổi.${
+    p.tien_cho_cap_nhat ? ' Tiền công nhật được tính lại khi phòng lương cập nhật phiếu — có thể chưa gồm những ngày công mới chấm.' : ''}${
     xemThay && p.cong_nhan_thay === false ? ' Công nhân <b>chưa thấy</b> phiếu này — chỉ hiện với công nhân sau khi duyệt.' : ''}</span></div>` : ''}
         ${p.chua_gia ? `<div class="ns-risk-bar ns-warn-bar ns-pl-bao"><span>⚠ ${p.chua_gia} dòng sản phẩm chưa có đơn giá (đang tính 0 đồng)${congNhan ? ' — phòng lương đang cập nhật.' : ' — chưa duyệt được.'}</span></div>` : ''}
         <div class="ns-pl-tong">${tong}</div>

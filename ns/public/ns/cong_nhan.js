@@ -12,7 +12,7 @@ import { call } from './lib/api.js';
 import { escapeHtml as esc } from './lib/format.js';
 import { phieuLuongHtml } from './components/phieu_luong.js';
 
-const BUILD = 'ns-cn3'; // PHẢI khớp SHELL_BUILD trong www/phieuluong.py
+const BUILD = 'ns-cn4'; // PHẢI khớp SHELL_BUILD trong www/phieuluong.py
 const CTX = window.NS_CONTEXT || {};
 window.NS_CN = { build: BUILD };
 console.log(`[NS] cong_nhan build=${BUILD}`);
@@ -96,7 +96,8 @@ function veKhung() {
             <button class="ns-icon-btn ns-cn-toi" id="cn-toi" aria-label="Tháng sau" ${st.i <= 0 ? 'disabled' : ''}>›</button>
         </div>
         <div id="cn-phieu" class="ns-card ns-cn-phieu" aria-live="polite"><div class="ns-skeleton" style="height:220px"></div></div>
-        <div class="ns-cn-chan">Thắc mắc về lương: liên hệ phòng nhân sự. Phiếu chỉ hiện sau khi phòng lương duyệt.</div>`;
+        <div class="ns-cn-chan">Thắc mắc về lương: liên hệ phòng nhân sự. ${st.info && st.info.xem_nhap
+        ? 'Phiếu chưa duyệt ghi “Tạm tính” — số còn có thể thay đổi.' : 'Phiếu chỉ hiện sau khi phòng lương duyệt.'}</div>`;
     view.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
     view.querySelector('#cn-lui').onclick = () => chon(st.i + 1);
     view.querySelector('#cn-toi').onclick = () => chon(st.i - 1);
@@ -145,7 +146,7 @@ async function batDau() {
     if (!st.thang.length) {
         view.innerHTML = `${thanhXemThay()}<div class="ns-empty" style="padding-top:2.5rem"><div class="ns-empty-icon">🧾</div>
             <div class="ns-empty-title">Chưa có phiếu lương nào${CTX.xemThay ? ' (kể cả tạm tính)' : ''}</div>
-            <div>Phiếu lương hiện ở đây sau khi phòng lương duyệt.</div></div>`;
+            <div>${d.xem_nhap ? 'Phiếu lương hiện ở đây khi phòng lương lập phiếu tháng.' : 'Phiếu lương hiện ở đây sau khi phòng lương duyệt.'}</div></div>`;
         view.querySelectorAll('[data-cn-dang-xuat]').forEach((b) => { b.onclick = dangXuat; });
         return;
     }

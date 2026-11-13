@@ -24,7 +24,7 @@ no_cache = 1
 sitemap = 0
 
 # PHẢI khớp BUILD trong public/ns/cong_nhan.js (Luật vàng #2 — chống shell cũ)
-SHELL_BUILD = "ns-cn3"
+SHELL_BUILD = "ns-cn4"
 
 
 def _asset_version():

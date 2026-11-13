@@ -198,6 +198,10 @@ kiem("dòng tài khoản: SĐT, bật, riêng / dùng chung", ds["HR-EMP-1"]["ta
      and ds["HR-EMP-1"]["tai_khoan"]["rieng"] and ds["HR-EMP-1"]["tai_khoan"]["bat"]
      and not ds["HR-EMP-5"]["tai_khoan"]["rieng"])
 kiem("báo site đã cho đăng nhập bằng SĐT", d["dang_nhap_sdt"])
+kiem("báo công nhân đang thấy cả phiếu tạm tính (mặc định)", d["cong_nhan_xem_nhap"] is True)
+F.CONF["ns_cong_nhan_xem_nhap"] = 0
+kiem("… tắt bằng site_config thì báo chỉ phiếu đã duyệt", TK.danh_sach()["cong_nhan_xem_nhap"] is False)
+F.CONF.clear()
 F.HE_THONG.update({"allow_login_using_mobile_number": 0, "allow_login_using_user_name": 0})
 kiem("… chưa bật → cờ false để màn hình báo đỏ", not TK.danh_sach()["dang_nhap_sdt"])
 F.META_FIELDS["Employee"] = {"employee_name", "department", "status", "cell_number"}

@@ -112,6 +112,12 @@ def seed():
            chamcong=[dict(ngaycc=D(2026, 10, d), congngay=1 if d != 3 else 0.5, themgio=2.5 if d == 1 else 0)
                      for d in range(1, 27)],
            bangghiloiphat=[dict(noidung="Đi muộn", soluong=3, giatien=10_000, thanhtienphat=30_000)])
+    # Công nhật tạm tính T11 của Bình (nháp): /chamcong2 đã ghi tới 12/11 nhưng tiền mới tính tới lần kế toán lưu trước
+    F.them("SalaryDay", "PLC-0011", employee="HR-EMP-00002", month=11, year=2026, docstatus=0, status="",
+           ngaysanxuat=0, congngay=8, lamthem=0, luongcoban=6_500_000, luongngaycong=2_000_000, anca=160_000,
+           tongtien=2_160_000, tongkhautru=0, luongthucnhan=2_160_000, luongck=0,
+           chamcong=[dict(ngaycc=D(2026, 11, d), congngay=1, themgio=0) for d in range(2, 13) if d != 8],
+           bangghiloiphat=[])
 
 
 # Màn hồ sơ gọi nhan_vien.chi_tiet (cả bộ cảnh báo / bổ sung) — ngoài phạm vi test này nên trả mẫu đúng SHAPE thật.
@@ -175,6 +181,9 @@ class H(BaseHTTPRequestHandler):
             seed()
             GOI.clear()
             return self._gui(200, "ok")
+        if p == "/__test/conf":                   # đặt site_config giả: /__test/conf?ns_cong_nhan_xem_nhap=0
+            F.CONF.update({k: int(v) for k, v in q.items()})
+            return self._gui(200, json.dumps(F.CONF), "application/json")
         if p == "/__test/db":
             return self._gui(200, json.dumps(F.DB.get(q["dt"], {}).get(q["name"]), default=str), "application/json")
         if p in ("/ns", "/phieuluong"):

@@ -73,7 +73,7 @@ function hoiSdt(nv) {
             body: `<p><b>${esc(nv.employee_name)}</b> · ${esc(nv.employee)}</p>
                 <div class="ns-field ns-mt-2"><label>Số điện thoại (tên đăng nhập) *</label>
                 <input class="ns-input" id="tk-sdt" inputmode="tel" autocomplete="off" value="${esc(nv.cell_number || '')}" placeholder="0912345678"></div>
-                <div class="ns-text-sm ns-text-muted ns-mt-2">Hệ thống tự đặt mật khẩu, hiện một lần để in thẻ. Công nhân chỉ xem được phiếu lương <b>đã duyệt</b> của chính mình.</div>`,
+                <div class="ns-text-sm ns-text-muted ns-mt-2">Hệ thống tự đặt mật khẩu, hiện một lần để in thẻ. Công nhân chỉ xem được phiếu lương của chính mình.</div>`,
             footer: '<button class="ns-btn ns-btn-ghost" data-ns-close>Huỷ</button><button class="ns-btn ns-btn-primary" id="tk-ok">Tạo tài khoản</button>',
         });
         let xong = false;

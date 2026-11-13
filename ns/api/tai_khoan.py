@@ -36,7 +36,7 @@ from frappe import _
 from frappe.utils import cint, get_url
 
 from ns.api import guard, guard_quan_ly
-from ns.api.cong_nhan import dia_chi_the
+from ns.api.cong_nhan import dia_chi_the, xem_nhap
 
 ROLE_CN = "NS Cong Nhan"
 F_TK = "ns_tai_khoan"
@@ -239,6 +239,7 @@ def danh_sach():
     active = [d for d in dong if d["status"] == "Active"]
     return {
         "co_field": co_field, "dang_nhap_sdt": _dang_nhap_sdt(), "url": get_url(TRANG_CN), "dong": dong,
+        "cong_nhan_xem_nhap": xem_nhap(),
         "tong_hop": {
             "so_nv": len(active),
             "co_tk": sum(1 for d in active if d["tai_khoan"]),

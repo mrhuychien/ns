@@ -4,7 +4,7 @@ App Frappe/ERPNext/HRMS v16 cho site `site1.local` (a.rongvanghoanggia.com). Por
 (mobile-first, hash router, không build step) + hook server-side. Spec gốc: `SPEC_ns_v1.md`.
 
 **Công nhân tự xem phiếu lương** tại **`/phieuluong`** (đăng nhập bằng số điện thoại + mật khẩu, chỉ thấy phiếu
-**đã duyệt** của chính mình). Phiếu lương trình bày theo thẻ Phiếu lương của app `sx` (D110 + từng ngày D234) — cùng
+của chính mình — cả phiếu **tạm tính** (chưa duyệt, ghi rõ "Tạm tính"). Phiếu lương trình bày theo thẻ Phiếu lương của app `sx` (D110 + từng ngày D234) — cùng
 một component cho phòng nhân sự và công nhân. Xem mục [Phiếu lương](#phiếu-lương-port-từ-app-sx-d110--d234) và
 [Công nhân đăng nhập xem phiếu lương](#công-nhân-đăng-nhập-xem-phiếu-lương-phieuluong).
 
@@ -33,7 +33,7 @@ Nghiệm thu nhanh: mở `https://a.rongvanghoanggia.com/ns` bằng user có rol
 Nghiệm thu phiếu lương công nhân: HR Manager vào `/ns#/tai-khoan` → **＋ Tạo tài khoản** cho 1 công nhân → **In thẻ**
 → quét QR bằng điện thoại. Máy đang đăng nhập tài khoản phòng nhân sự thì thấy phiếu của chủ thẻ ở chế độ *xem như
 công nhân* → bấm **Đăng xuất để thử đăng nhập bằng thẻ** → đăng nhập SĐT + mật khẩu trên thẻ → quay lại đúng thẻ, thấy
-phiếu đã duyệt của người đó, không có tháng còn nháp; sửa địa chỉ thành `/phieuluong?nv=<mã người khác>` → vẫn chỉ là
+phiếu lương của người đó (tháng chưa duyệt ghi *Tạm tính*); sửa địa chỉ thành `/phieuluong?nv=<mã người khác>` → vẫn chỉ là
 phiếu của mình.
 
 ## Cấu trúc
@@ -152,9 +152,9 @@ Công nhân quét QR → đăng nhập SĐT + mật khẩu → vào thẳng phi�
 | Tài khoản | username = mobile_no = SĐT chuẩn hoá `0xxxxxxxxx`; email giả `{SĐT}@{tên miền}` — tên miền: `site_config ns_ten_mien_user` → `SX Settings.ten_mien_user` (cùng tài khoản app sx cấp) → `sx.local`/`ns.local`. Mật khẩu 8 ký tự đọc được (bỏ 0 O o 1 l I i) |
 | SĐT đã có tài khoản | Không tự gắn: hiện tên chủ tài khoản, HR xác nhận mới gắn (SĐT gõ nhầm = lộ lương cho người khác). Tài khoản có Desk thì không thêm role (role có home_page sẽ kéo cả người dùng Desk sang `/phieuluong`) |
 | Tài khoản dùng chung | (QC có tài khoản sx, văn phòng có Desk) chỉ **Gắn / Gỡ**; cấp lại mật khẩu / khoá chỉ với tài khoản riêng của app (mọi role ⊆ {NS Cong Nhan}) — không bao giờ đụng Administrator / tài khoản khác |
-| Công nhân thấy gì | Chỉ hồ sơ gắn với **phiên đăng nhập** (trình duyệt không gửi mã nhân viên); tài khoản khoá / chưa gắn → chặn. Mặc định chỉ phiếu **đã duyệt**; phiếu huỷ không bao giờ |
-| Xem phiếu nháp (tuỳ chọn) | `bench --site site1.local set-config ns_cong_nhan_xem_nhap 1` → hiện thêm phiếu nháp, ghi **Tạm tính**. SalaryDay nháp chỉ hiện khi P1 đã bật (`ns_tinh_lai_salaryday = 1`) — trước P1 số nháp chỉ đúng sau khi kế toán Save trên Desk |
-| Xem như công nhân | HR (HR User trở lên) mở `/phieuluong?nv=<mã NV>` (nút 👁 ở `#/tai-khoan` và hồ sơ) hoặc quét thẻ — thấy màn công nhân đang thấy **và cả phiếu tạm tính** (chưa duyệt, như ở `/ns`): tháng tạm tính ghi *Tạm tính T12/2026*, phiếu ghi rõ **"Công nhân chưa thấy phiếu này — chỉ hiện với công nhân sau khi duyệt"** (trừ khi đã bật cho công nhân xem nháp). Người không phải HR thêm `?nv=` thì bị bỏ qua |
+| Công nhân thấy gì | Chỉ hồ sơ gắn với **phiên đăng nhập** (trình duyệt không gửi mã nhân viên); tài khoản khoá / chưa gắn → chặn. Phiếu **đã duyệt** và phiếu **tạm tính** (nháp — khoán lẫn công nhật): tháng ghi *Tạm tính T12/2026*, phiếu ghi **Tạm tính** + "số còn có thể thay đổi". Phiếu huỷ không bao giờ |
+| Phiếu tạm tính | **Mặc định bật**. Tắt (công nhân chỉ thấy phiếu đã duyệt): `bench --site site1.local set-config ns_cong_nhan_xem_nhap 0`. Công nhật (SalaryDay) nháp khi P1 **chưa bật**: tiền chỉ được tính lại khi kế toán lưu phiếu trên Desk, còn bảng chấm công thì `/chamcong2` ghi ngay → phiếu ghi thêm *"Tiền công nhật được tính lại khi phòng lương cập nhật phiếu — có thể chưa gồm những ngày công mới chấm"* (bật P1 — `ns_tinh_lai_salaryday 1` — là hết). Số luôn lấy nguyên từ phiếu, không tự tính lại: HR ở `/ns` thấy cùng con số |
+| Xem như công nhân | HR (HR User trở lên) mở `/phieuluong?nv=<mã NV>` (nút 👁 ở `#/tai-khoan` và hồ sơ) hoặc quét thẻ — thấy đúng màn công nhân đang thấy, kể cả phiếu tạm tính; nếu đã **tắt** cho công nhân xem tạm tính thì HR vẫn thấy phiếu tạm tính, có ghi **"Công nhân chưa thấy phiếu này — chỉ hiện với công nhân sau khi duyệt"**. Người không phải HR thêm `?nv=` thì bị bỏ qua |
 | Quyền màn Tài khoản | Xem: HR User / HR Manager / System Manager. Tạo / cấp lại / khoá / gỡ: **HR Manager / System Manager** |
 | Gỡ | Hết xem lương ngay; tài khoản riêng bị khoá luôn (không để tài khoản mồ côi), tài khoản dùng chung chỉ bỏ role NS |
 
@@ -221,7 +221,8 @@ Gồm: `py_compile` + `node --check`; validator của skill nextcode-build (`val
 `check_doctype_json`, `lint_patches`); `test-importmap.py` (import map của `/ns` và `/phieuluong` là JSON hợp lệ và
 phủ đủ module dùng chung — Luật vàng #1; BUILD khớp — Luật vàng #2); `test-phieuluong.py` (view model: gộp sản phẩm,
 từng ngày, giờ, chưa có giá, Σ khoản = tổng thu nhập, quyền), `test-congnhan.py` (rò rỉ: Guest / chưa gắn / bị khoá /
-truyền mã người khác, chỉ phiếu đã duyệt, cờ xem nháp + P1, xem như công nhân), `test-taikhoan.py` (tạo theo SĐT,
+truyền mã người khác, phiếu tạm tính mặc định + tắt bằng site_config, dòng "tiền chờ cập nhật" khi P1 chưa bật, xem
+như công nhân), `test-taikhoan.py` (tạo theo SĐT,
 xác nhận gắn tài khoản sẵn có, không đụng tài khoản dùng chung / Administrator, khoá → đăng xuất, gỡ);
 `test-desk.py` (workspace nạp được — đúng chỗ, content ↔ card / shortcut, link chỉ tới DocType chắc có, URL trỏ màn
 có thật; ô màn Apps — route khớp mẫu Desk, logo SVG, has_permission, không app_logo_url; icon — thư mục chỉ .json, tên

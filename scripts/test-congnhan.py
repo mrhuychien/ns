@@ -86,36 +86,46 @@ kiem("công nhân truyền mã NGƯỜI KHÁC → PermissionError (không lộ l
 kiem("… truyền chính mã mình cũng không được (chỉ HR xem thay)",
      "PermissionError" in (loi(lambda: CN.phieu(9, 2026, employee="HR-EMP-1")) or ""))
 
-print("\n-- công nhân thấy gì --")
+print("\n-- công nhân thấy gì (mặc định: cả phiếu tạm tính) --")
 t = CN.cac_thang()
-kiem("tháng mới nhất trước; chỉ tháng có phiếu ĐÃ DUYỆT (nháp T10 và phiếu huỷ T7 không hiện)",
-     [(x["thang"], x["nam"]) for x in t["thang"]] == [(9, 2026), (8, 2026)], str(t["thang"]))
+kiem("tháng mới nhất trước; có cả tháng TẠM TÍNH (nháp T10), phiếu huỷ T7 không bao giờ",
+     [(x["thang"], x["nam"]) for x in t["thang"]] == [(10, 2026), (9, 2026), (8, 2026)], str(t["thang"]))
+kiem("… tháng nháp gắn cờ tam_tinh, tháng đã duyệt thì không", [x["tam_tinh"] for x in t["thang"]] == [True, False, False])
 kiem("T9 có cả phiếu nhật + khoán → cộng thực nhận nguyên số hai phiếu, đếm 2 phiếu",
-     (t["thang"][0]["thuc_nhan"], t["thang"][0]["so_phieu"]) == (6_900_000, 2), str(t["thang"][0]))
-kiem("thông tin người xem đúng hồ sơ gắn tài khoản", (t["employee"], t["employee_name"], t["xem_thay"])
-     == ("HR-EMP-1", "Nguyễn Thị An", False))
+     (t["thang"][1]["thuc_nhan"], t["thang"][1]["so_phieu"]) == (6_900_000, 2), str(t["thang"][1]))
+kiem("thông tin người xem đúng hồ sơ gắn tài khoản; báo đang cho xem phiếu tạm tính",
+     (t["employee"], t["employee_name"], t["xem_thay"], t["xem_nhap"]) == ("HR-EMP-1", "Nguyễn Thị An", False, True))
 p = CN.phieu(9, 2026)
 kiem("phiếu T9: hai phiếu (nhật + khoán), đều của chính mình", sorted(x["loai"] for x in p["phieu"]) == ["khoan", "nhat"]
      and all(x["employee"] == "HR-EMP-1" for x in p["phieu"]), str([x["name"] for x in p["phieu"]]))
-kiem("phiếu nháp T10 KHÔNG xem được kể cả gọi thẳng tháng", CN.phieu(10, 2026)["phieu"] == [])
+p10 = CN.phieu(10, 2026)["phieu"]
+kiem("phiếu khoán tạm tính T10: docstatus 0 (giao diện ghi 'Tạm tính'), không có dòng 'tiền chờ cập nhật' (khoán tính ở server)",
+     [(x["name"], x["docstatus"], x["tien_cho_cap_nhat"]) for x in p10] == [("PL-2026-10-HR-EMP-1", 0, False)], str(p10))
 kiem("phiếu đã huỷ T7 không bao giờ hiện", CN.phieu(7, 2026)["phieu"] == [])
 kiem("tháng lạ → chặn", loi(lambda: CN.phieu(13, 2026)) is not None and loi(lambda: CN.phieu(1, 1900)) is not None)
 F.dang_nhap("binh@x")
 kiem("Bình chỉ thấy phiếu của Bình (T9 nhật), không thấy phiếu của An",
      [x["name"] for x in CN.phieu(9, 2026)["phieu"]] == ["PLC-0001"])
+p10 = CN.phieu(10, 2026)["phieu"]
+kiem("công nhật: SalaryDay tạm tính T10 cũng hiện; P1 chưa bật → kèm 'tiền chờ cập nhật' (tiền chỉ tính lại khi kế toán "
+     "lưu phiếu trên Desk)", [(x["name"], x["docstatus"], x["tien_cho_cap_nhat"]) for x in p10] == [("PLC-0002", 0, True)],
+     str(p10))
+kiem("… số lấy NGUYÊN từ phiếu, không tự tính lại (HR ở /ns thấy cùng con số)", p10[0]["thuc_nhan"] == 6_200_000)
+F.CONF["ns_tinh_lai_salaryday"] = 1
+kiem("… P1 bật (tính lại ở server mỗi lần lưu) → hết dòng 'tiền chờ cập nhật'",
+     [x["tien_cho_cap_nhat"] for x in CN.phieu(10, 2026)["phieu"]] == [False])
+kiem("… phiếu đã duyệt không bao giờ có dòng đó", not any(x["tien_cho_cap_nhat"] for x in CN.phieu(9, 2026)["phieu"]))
+F.CONF.clear()
 
-print("\n-- bật cho xem phiếu nháp (tạm tính) --")
-F.CONF["ns_cong_nhan_xem_nhap"] = 1
+print("\n-- tắt cho công nhân xem tạm tính (ns_cong_nhan_xem_nhap = 0) --")
+F.CONF["ns_cong_nhan_xem_nhap"] = 0
 F.dang_nhap("an@x")
 t = CN.cac_thang()
-kiem("khoán nháp T10 hiện, gắn cờ tạm tính", t["thang"][0]["thang"] == 10 and t["thang"][0]["tam_tinh"]
-     and not t["thang"][1]["tam_tinh"], str(t["thang"]))
-kiem("… phiếu T10 có docstatus 0 (giao diện ghi 'Tạm tính')", [x["docstatus"] for x in CN.phieu(10, 2026)["phieu"]] == [0])
+kiem("chỉ tháng có phiếu ĐÃ DUYỆT (nháp T10 ẩn), báo đã tắt", [x["thang"] for x in t["thang"]] == [9, 8]
+     and t["xem_nhap"] is False, str(t))
+kiem("… phiếu nháp T10 KHÔNG xem được kể cả gọi thẳng tháng", CN.phieu(10, 2026)["phieu"] == [])
 F.dang_nhap("binh@x")
-kiem("SalaryDay nháp VẪN ẩn khi P1 chưa bật (số nháp chỉ đúng sau khi kế toán Save trên Desk)",
-     CN.phieu(10, 2026)["phieu"] == [] and [x["thang"] for x in CN.cac_thang()["thang"]] == [9])
-F.CONF["ns_tinh_lai_salaryday"] = 1
-kiem("… P1 bật → SalaryDay nháp hiện", [x["name"] for x in CN.phieu(10, 2026)["phieu"]] == ["PLC-0002"])
+kiem("… SalaryDay nháp cũng ẩn", CN.phieu(10, 2026)["phieu"] == [] and [x["thang"] for x in CN.cac_thang()["thang"]] == [9])
 F.CONF.clear()
 
 print("\n-- phòng nhân sự xem như công nhân --")
@@ -124,27 +134,16 @@ kiem("HR không truyền mã → tài khoản HR không gắn hồ sơ → chặ
 t = CN.cac_thang(employee="HR-EMP-1")
 kiem("HR xem thay → thấy cả tháng chỉ có phiếu TẠM TÍNH (T10 nháp), mới nhất trước, xem_thay=True",
      [x["thang"] for x in t["thang"]] == [10, 9, 8] and t["xem_thay"], str(t))
-kiem("… tháng tạm tính đánh dấu tam_tinh + công nhân CHƯA thấy; tháng đã duyệt công nhân thấy",
-     (t["thang"][0]["tam_tinh"], t["thang"][0]["cong_nhan_thay"]) == (True, False)
+kiem("… tháng tạm tính đánh dấu tam_tinh; mặc định công nhân CŨNG thấy (cong_nhan_thay) — như công nhân tự xem",
+     (t["thang"][0]["tam_tinh"], t["thang"][0]["cong_nhan_thay"]) == (True, True)
      and all(x["cong_nhan_thay"] and not x["tam_tinh"] for x in t["thang"][1:]), str(t["thang"]))
-p10 = CN.phieu(10, 2026, employee="HR-EMP-1")["phieu"]
-kiem("… mở phiếu tạm tính T10: docstatus 0, ghi rõ công nhân chưa thấy",
-     [(x["name"], x["docstatus"], x["cong_nhan_thay"]) for x in p10] == [("PL-2026-10-HR-EMP-1", 0, False)], str(p10))
-kiem("… phiếu đã duyệt: công nhân thấy", all(x["cong_nhan_thay"] for x in CN.phieu(9, 2026, employee="HR-EMP-1")["phieu"]))
 kiem("… phiếu ĐÃ HUỶ vẫn không bao giờ hiện, kể cả với HR", CN.phieu(7, 2026, employee="HR-EMP-1")["phieu"] == [])
+F.CONF["ns_cong_nhan_xem_nhap"] = 0
 t = CN.cac_thang(employee="HR-EMP-2")
-kiem("… công nhật: SalaryDay nháp T10 cũng hiện với HR (như ở /ns), công nhân chưa thấy",
-     [(x["thang"], x["tam_tinh"], x["cong_nhan_thay"]) for x in t["thang"]] == [(10, True, False), (9, False, True)],
-     str(t["thang"]))
-F.CONF["ns_cong_nhan_xem_nhap"] = 1
-kiem("bật cho công nhân xem nháp → phiếu khoán tạm tính ghi 'công nhân thấy'",
-     [x["cong_nhan_thay"] for x in CN.phieu(10, 2026, employee="HR-EMP-1")["phieu"]] == [True])
-kiem("… SalaryDay nháp vẫn 'công nhân chưa thấy' khi P1 chưa bật",
-     [x["cong_nhan_thay"] for x in CN.phieu(10, 2026, employee="HR-EMP-2")["phieu"]] == [False])
+kiem("đã tắt cho công nhân xem nháp → HR vẫn thấy tháng tạm tính (khoán + nhật), ghi 'công nhân chưa thấy'",
+     [(x["thang"], x["tam_tinh"], x["cong_nhan_thay"]) for x in t["thang"]] == [(10, True, False), (9, False, True)]
+     and [x["cong_nhan_thay"] for x in CN.phieu(10, 2026, employee="HR-EMP-1")["phieu"]] == [False], str(t["thang"]))
 F.CONF.clear()
-F.dang_nhap("an@x")
-kiem("công nhân tự xem KHÔNG đổi: vẫn không thấy tháng tạm tính T10",
-     [x["thang"] for x in CN.cac_thang()["thang"]] == [9, 8] and CN.phieu(10, 2026)["phieu"] == [])
 F.dang_nhap("hr@x")
 kiem("HR truyền mã không có → DoesNotExistError", "DoesNotExist" in (loi(lambda: CN.phieu(9, 2026, employee="X")) or ""))
 

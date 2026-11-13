@@ -7,12 +7,16 @@ Ai xem được gì — kiểm ở server, trong mọi method:
   · Ngoại lệ duy nhất: người có quyền HR của app (ns.api.guard) truyền `employee` để XEM NHƯ CÔNG NHÂN (công nhân
     hỏi "sao tôi không thấy phiếu tháng 9" → HR mở đúng màn công nhân đang nhìn).
 Thấy phiếu nào:
-  · Công nhân: mặc định CHỈ phiếu ĐÃ DUYỆT (docstatus = 1) — số cuối cùng, không đổi nữa.
-  · Phòng nhân sự xem thay (quét thẻ / nút 👁): thấy CẢ phiếu TẠM TÍNH (nháp) — như ở /ns; mỗi phiếu kèm
-    `cong_nhan_thay` để màn hình ghi rõ phiếu nào công nhân CHƯA thấy (chỉ hiện với công nhân sau khi duyệt).
-  · site_config `ns_cong_nhan_xem_nhap = 1` → CÔNG NHÂN thấy thêm phiếu NHÁP, ghi rõ "tạm tính". Riêng SalaryDay nháp chỉ
-    hiện khi P1 đã bật (`ns_tinh_lai_salaryday = 1`): trước P1, số trên phiếu nháp chỉ đúng sau khi kế toán mở Desk
-    và Save (SPEC §7) — cho công nhân xem số cũ là tạo thắc mắc giả.
+  · Công nhân: phiếu ĐÃ DUYỆT và phiếu TẠM TÍNH (nháp, docstatus 0) — cả công khoán lẫn công nhật; phiếu nháp ghi rõ
+    "Tạm tính", số còn đổi được (yêu cầu 13/11/2026: công nhân thấy phiếu tạm tính). Tắt — chỉ phiếu đã duyệt:
+    `bench --site <site> set-config ns_cong_nhan_xem_nhap 0`.
+  · Công nhật (SalaryDay) nháp khi P1 CHƯA bật (`ns_tinh_lai_salaryday` ≠ 1): tiền trên phiếu chỉ được tính lại khi kế
+    toán lưu phiếu trên Desk (Client Script — SPEC §7), còn bảng chấm công thì /chamcong2 ghi ngay → phiếu kèm
+    `tien_cho_cap_nhat` để màn hình nói rõ "có thể chưa gồm ngày công mới chấm". KHÔNG tự tính lại ở đây: phòng nhân
+    sự ở /ns thấy đúng số trên phiếu — hai nơi tính là hai con số.
+  · Phòng nhân sự xem thay (quét thẻ / nút 👁): thấy cả phiếu tạm tính; mỗi phiếu kèm `cong_nhan_thay` (đã tắt cho công
+    nhân xem nháp thì màn hình ghi "công nhân chưa thấy").
+  · Phiếu đã huỷ không bao giờ.
 Không ghi gì. Đọc SalaryDay / SX Phieu Luong bỏ qua quyền DocType SAU KHI đã khoá phạm vi về đúng một nhân viên
 (gotcha #9) — role NS Cong Nhan không có quyền DocType nào.
 """
@@ -23,6 +27,7 @@ from frappe import _
 from frappe.utils import cint, flt
 
 from ns.api import co_quyen
+from ns.salaryday import bat_hook as p1_dang_bat
 from ns.api.phieu import chon_phieu, phieu_khoan, phieu_nhat
 from ns.api.phieu_luong import DT_KHOAN, DT_NHAT, lay_doc, xem_doc
 
@@ -64,25 +69,27 @@ def pham_vi(employee=None):
     return emp, False
 
 
-def _xem_nhap(loai):
-    """CÔNG NHÂN có được thấy phiếu nháp loại này không (site_config — xem docstring đầu tệp)."""
-    if not cint(frappe.conf.get("ns_cong_nhan_xem_nhap")):
-        return False
-    if loai == "nhat":
-        return bool(cint(frappe.conf.get("ns_tinh_lai_salaryday")))
-    return True
+def xem_nhap():
+    """Công nhân có thấy phiếu TẠM TÍNH (nháp) không — MẶC ĐỊNH CÓ; site_config ns_cong_nhan_xem_nhap = 0 để tắt."""
+    return bool(cint(frappe.conf.get("ns_cong_nhan_xem_nhap", 1)))
 
 
-def _hien(rows, loai, xem_thay=False):
-    """Phiếu được thấy: công nhân — đã duyệt, nháp chỉ khi bật; phòng nhân sự xem thay — cả phiếu tạm tính (nháp).
+def _hien(rows, xem_thay=False):
+    """Phiếu được thấy: đã duyệt + tạm tính (công nhân: trừ khi đã tắt; phòng nhân sự xem thay: luôn).
     Phiếu đã huỷ không bao giờ."""
-    ok = {1, 0} if (xem_thay or _xem_nhap(loai)) else {1}
+    ok = {1, 0} if (xem_thay or xem_nhap()) else {1}
     return [r for r in rows if cint(r.docstatus) in ok]
 
 
-def cong_nhan_thay(docstatus, loai):
+def cong_nhan_thay(docstatus):
     """Công nhân (tự đăng nhập) có thấy phiếu này không — để màn xem thay của phòng nhân sự ghi rõ."""
-    return cint(docstatus) == 1 or _xem_nhap(loai)
+    return cint(docstatus) == 1 or xem_nhap()
+
+
+def tien_cho_cap_nhat(loai, docstatus):
+    """Phiếu công nhật nháp khi P1 chưa bật: tiền chỉ tính lại khi kế toán lưu phiếu trên Desk — có thể chưa theo kịp
+    bảng chấm công (xem docstring đầu tệp)."""
+    return loai == "nhat" and cint(docstatus) == 0 and not p1_dang_bat()
 
 
 def _theo_thang(rows, f_thang, f_nam):
@@ -97,7 +104,7 @@ def _theo_thang(rows, f_thang, f_nam):
 def _thong_tin(emp, xem_thay):
     e = frappe.db.get_value("Employee", emp, ["name", "employee_name", "department"], as_dict=True) or {}
     return {"employee": emp, "employee_name": e.get("employee_name") or emp, "department": e.get("department"),
-            "xem_thay": xem_thay, "xem_nhap": _xem_nhap("khoan")}
+            "xem_thay": xem_thay, "xem_nhap": xem_nhap()}
 
 
 @frappe.whitelist()
@@ -109,14 +116,14 @@ def cac_thang(employee=None):
     for loai, rows, ft, fn, f_tien in (
             ("nhat", phieu_nhat(employees=[emp]), "month", "year", "luongthucnhan"),
             ("khoan", phieu_khoan(employees=[emp]), "thang", "nam", "luong_thuc_nhan")):
-        for k, ds in _theo_thang(_hien(rows, loai, xem_thay), ft, fn).items():
+        for k, ds in _theo_thang(_hien(rows, xem_thay), ft, fn).items():
             p, _trung = chon_phieu(ds)
             g = nhom.setdefault(k, {"nam": k[0], "thang": k[1], "thuc_nhan": 0.0, "so_phieu": 0, "tam_tinh": False,
                                     "cong_nhan_thay": False})
             g["thuc_nhan"] += flt(p.get(f_tien))
             g["so_phieu"] += 1
             g["tam_tinh"] = g["tam_tinh"] or cint(p.docstatus) == 0
-            g["cong_nhan_thay"] = g["cong_nhan_thay"] or cong_nhan_thay(p.docstatus, loai)
+            g["cong_nhan_thay"] = g["cong_nhan_thay"] or cong_nhan_thay(p.docstatus)
     return {**_thong_tin(emp, xem_thay), "thang": [nhom[k] for k in sorted(nhom, reverse=True)]}
 
 
@@ -130,11 +137,12 @@ def phieu(thang, nam, employee=None):
     out = []
     for loai, dt, rows in (("nhat", DT_NHAT, phieu_nhat(thang, nam, [emp])),
                            ("khoan", DT_KHOAN, phieu_khoan(thang, nam, [emp]))):
-        p, _trung = chon_phieu(_hien(rows, loai, xem_thay))
+        p, _trung = chon_phieu(_hien(rows, xem_thay))
         if p:
             xem = xem_doc(lay_doc(dt, p.name))
             if xem.get("employee") != emp:          # phòng thủ: bộ lọc employee đã làm việc này
                 continue
-            xem["cong_nhan_thay"] = cong_nhan_thay(xem.get("docstatus"), loai)
+            xem["cong_nhan_thay"] = cong_nhan_thay(xem.get("docstatus"))
+            xem["tien_cho_cap_nhat"] = tien_cho_cap_nhat(loai, xem.get("docstatus"))
             out.append(xem)
     return {**_thong_tin(emp, xem_thay), "thang": thang, "nam": nam, "phieu": out}

@@ -81,11 +81,19 @@ try {
         kiem('chào đúng người: tên + mã NV + bộ phận', gon(await p.textContent('.ns-cn-chao'))
             === 'Nguyễn Thị An HR-EMP-00001 · Công khoán - HGC', gon(await p.textContent('.ns-cn-chao')));
         const opts = await p.$$eval('#cn-chon option', (o) => o.map((x) => x.textContent));
-        kiem('chỉ tháng có phiếu ĐÃ DUYỆT, mới nhất trước (nháp T12 không hiện)', JSON.stringify(opts)
-            === JSON.stringify(['Tháng 11/2026', 'Tháng 10/2026']), JSON.stringify(opts));
+        kiem('công nhân thấy cả tháng TẠM TÍNH (T12 nháp), mới nhất trước', JSON.stringify(opts)
+            === JSON.stringify(['Tạm tính T12/2026', 'Tháng 11/2026', 'Tháng 10/2026']), JSON.stringify(opts));
         kiem('mặc định tháng mới nhất; › tắt, ‹ bật', (await p.$eval('#cn-toi', (b) => b.disabled))
             && !(await p.$eval('#cn-lui', (b) => b.disabled)));
-        kiem('thực nhận to, đúng số phiếu', gon(await p.textContent('.ns-pl-tong-chinh b')) === '15.822.400 đ');
+        const t12 = gon(await p.textContent('#cn-phieu'));
+        kiem('phiếu tạm tính: nhãn Tạm tính + "số còn có thể thay đổi", KHÔNG có dòng dành cho phòng nhân sự',
+            gon(await p.textContent('.ns-pl-nhan-tt')) === 'Tạm tính' && t12.includes('Phiếu chưa duyệt — số đang tạm tính, còn có thể thay đổi.')
+            && !t12.includes('chưa thấy') && t12.includes('1.000.000 đ'), t12.slice(0, 300));
+        kiem('… chân trang nói phiếu chưa duyệt ghi Tạm tính', gon(await p.textContent('.ns-cn-chan')).includes('Phiếu chưa duyệt ghi “Tạm tính”'));
+        await chup(p, 'cn-khoan-t12-tam-tinh');
+        await p.click('#cn-lui');
+        await p.waitForFunction(() => location.hash === '#2026-11' && document.querySelector('.ns-pl-tong-chinh b')?.textContent.includes('15.822.400'));
+        kiem('‹ sang T11 (đã duyệt): thực nhận to, đúng số phiếu', gon(await p.textContent('.ns-pl-tong-chinh b')) === '15.822.400 đ');
         kiem('nhãn Đã duyệt', gon(await p.textContent('.ns-pl-nhan-tt')) === 'Đã duyệt');
         kiem('báo dòng chưa có giá (lời cho công nhân)', gon(await p.textContent('.ns-pl')).includes(
             '⚠ 1 dòng sản phẩm chưa có đơn giá (đang tính 0 đồng) — phòng lương đang cập nhật.'));
@@ -131,6 +139,7 @@ try {
         kiem('‹ sang T10: địa chỉ ghi #2026-10, phạt + bảo hiểm trong khấu trừ',
             t10.includes('Hộp móp') && t10.includes('− 20.000 đ') && t10.includes('Bảo hiểm − 500.000 đ'), t10.slice(0, 300));
         kiem('… T10 là tháng cũ nhất: ‹ tắt, › bật', (await p.$eval('#cn-lui', (b) => b.disabled)) && !(await p.$eval('#cn-toi', (b) => b.disabled)));
+        kiem('… tháng đã duyệt không có dòng "tạm tính"', !t10.includes('tạm tính'));
         await p.reload({ waitUntil: 'domcontentloaded' });
         await p.waitForSelector('#cn-phieu .ns-pl');
         kiem('tải lại vẫn đúng tháng đang xem (#2026-10)', (await p.$eval('#cn-chon', (s) => s.selectedOptions[0].textContent)).startsWith('Tháng 10/2026'));
@@ -153,6 +162,14 @@ try {
         const { ctx, p } = await moTrang('binh@x');
         await p.goto(`${GOCURL}/phieuluong`, { waitUntil: 'domcontentloaded' });
         await p.waitForSelector('#cn-phieu .ns-pl');
+        const t11 = gon(await p.textContent('#cn-phieu'));
+        kiem('công nhật tạm tính T11: nhãn Tạm tính + nhắc tiền tính lại khi phòng lương cập nhật (P1 chưa bật)',
+            (await p.$eval('#cn-chon', (s) => s.selectedOptions[0].textContent)) === 'Tạm tính T11/2026'
+            && t11.includes('Tiền công nhật được tính lại khi phòng lương cập nhật phiếu — có thể chưa gồm những ngày công mới chấm.')
+            && t11.includes('2.160.000 đ'), t11.slice(0, 400));
+        await chup(p, 'cn-nhat-t11-tam-tinh');
+        await p.click('#cn-lui');
+        await p.waitForFunction(() => document.querySelector('.ns-pl-tong-chinh b')?.textContent.includes('6.950.000'));
         const txt = gon(await p.textContent('#cn-phieu'));
         kiem('các khoản → tổng thu nhập → trừ → thực nhận, kèm phần chuyển khoản',
             /Lương ngày công 6\.000\.000 đ.*Tổng thu nhập 7\.530\.000 đ.*Tiền phạt − 30\.000 đ.*Bảo hiểm − 550\.000 đ.*Thực nhận 6\.950\.000 đ.*Trong đó chuyển khoản 5\.000\.000 đ/.test(txt), txt.slice(0, 400));
@@ -190,14 +207,14 @@ try {
         const x = (await goi()).slice(truoc).filter((g) => g.user === 'ql@x' && g.method.startsWith('ns.api.cong_nhan.'));
         kiem('… server được hỏi đúng mã chủ thẻ', x.length >= 2 && x.every((g) => g.args.employee === 'HR-EMP-00001'), JSON.stringify(x.map((g) => g.args)));
         kiem('… vừa màn 360px', (await tranNgang(p)) <= 0);
-        // Nhân sự xem thay thấy CẢ phiếu tạm tính (T12 nháp) — công nhân tự xem thì không (kiểm ở phần An bên trên)
+        // Nhân sự xem thay thấy CẢ phiếu tạm tính (T12 nháp) — mặc định công nhân cũng thấy (kiểm ở phần An bên trên)
         const optsHr = await p.$$eval('#cn-chon option', (o) => o.map((x) => x.textContent));
         kiem('nhân sự xem thay: có cả tháng TẠM TÍNH (T12 nháp), mặc định mở tháng mới nhất', JSON.stringify(optsHr)
             === JSON.stringify(['Tạm tính T12/2026', 'Tháng 11/2026', 'Tháng 10/2026'])
             && (await p.$eval('#cn-chon', (s) => s.selectedIndex)) === 0, JSON.stringify(optsHr));
         const t12 = gon(await p.textContent('#cn-phieu'));
-        kiem('… phiếu tạm tính: nhãn Tạm tính + ghi rõ công nhân CHƯA thấy (chỉ thấy sau khi duyệt)',
-            gon(await p.textContent('.ns-pl-nhan-tt')) === 'Tạm tính' && t12.includes('Công nhân chưa thấy phiếu này')
+        kiem('… phiếu tạm tính: nhãn Tạm tính; công nhân cũng thấy nên KHÔNG có dòng "công nhân chưa thấy"',
+            gon(await p.textContent('.ns-pl-nhan-tt')) === 'Tạm tính' && !t12.includes('chưa thấy')
             && t12.includes('1.000.000 đ'), t12.slice(0, 300));
         kiem('… thanh báo nói có cả phiếu tạm tính', bar.includes('có cả phiếu tạm tính'), bar);
         const chu = await p.$eval('#cn-chon', (s) => {
@@ -209,6 +226,24 @@ try {
         });
         kiem('… nhãn tháng tạm tính vừa ô chọn tháng ở 360px (không bị cắt chữ)', chu.rong <= chu.vung, JSON.stringify(chu));
         await chup(p, 'hr-quet-the-tam-tinh');
+        // Tắt cho công nhân xem tạm tính (site_config ns_cong_nhan_xem_nhap = 0): HR vẫn thấy, ghi rõ công nhân chưa thấy
+        await fetch(`${GOCURL}/__test/conf?ns_cong_nhan_xem_nhap=0`);
+        await p.reload({ waitUntil: 'domcontentloaded' });
+        await p.waitForSelector('#cn-phieu .ns-pl');
+        const tat = gon(await p.textContent('#cn-phieu'));
+        kiem('… đã tắt cho công nhân xem tạm tính: HR vẫn thấy T12, ghi rõ "Công nhân chưa thấy phiếu này"',
+            gon(await p.textContent('.ns-pl-nhan-tt')) === 'Tạm tính' && tat.includes('Công nhân chưa thấy phiếu này'), tat.slice(0, 300));
+        {
+            const cn = await moTrang('an@x');
+            await cn.p.goto(`${GOCURL}/phieuluong`, { waitUntil: 'domcontentloaded' });
+            await cn.p.waitForSelector('#cn-phieu .ns-pl');
+            const o = await cn.p.$$eval('#cn-chon option', (x) => x.map((y) => y.textContent));
+            kiem('… và công nhân An lúc đó chỉ thấy tháng đã duyệt; chân trang nói phiếu chỉ hiện sau khi duyệt',
+                JSON.stringify(o) === JSON.stringify(['Tháng 11/2026', 'Tháng 10/2026'])
+                && gon(await cn.p.textContent('.ns-cn-chan')).includes('Phiếu chỉ hiện sau khi phòng lương duyệt'), JSON.stringify(o));
+            await cn.ctx.close();
+        }
+        await fetch(`${GOCURL}/__test/conf?ns_cong_nhan_xem_nhap=1`);
         await p.click('#cn-lui');
         await p.waitForFunction(() => document.querySelector('.ns-pl-tong-chinh b')?.textContent.includes('15.822.400'));
         kiem('… sang T11 (đã duyệt): nhãn Đã duyệt, không có dòng "công nhân chưa thấy"',

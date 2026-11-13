@@ -59,7 +59,7 @@ export async function render({ container, query = {}, setHeader }) {
         container.querySelector('#tk-bao').innerHTML = `
             ${d.co_field ? '' : '<div class="ns-risk-bar"><span><strong>Chưa migrate:</strong> Employee chưa có field ns_tai_khoan — chạy <code>bench --site … migrate</code>.</span></div>'}
             ${d.dang_nhap_sdt ? '' : '<div class="ns-risk-bar"><span><strong>Site chưa cho đăng nhập bằng số điện thoại.</strong> System Settings → bật <b>Allow Login using Mobile Number</b> (hoặc <b>… User Name</b>) — chưa bật thì công nhân không đăng nhập được.</span></div>'}
-            <div class="ns-risk-bar ns-info-bar"><span>Công nhân mở <b>${esc(d.url)}</b>, đăng nhập bằng số điện thoại + mật khẩu, chỉ thấy phiếu lương <b>đã duyệt</b> của chính mình.</span></div>`;
+            <div class="ns-risk-bar ns-info-bar"><span>Công nhân mở <b>${esc(d.url)}</b>, đăng nhập bằng số điện thoại + mật khẩu, chỉ thấy phiếu lương của chính mình — ${d.cong_nhan_xem_nhap ? 'cả phiếu <b>tạm tính</b> (chưa duyệt, ghi rõ “Tạm tính”)' : 'chỉ phiếu <b>đã duyệt</b>'}.</span></div>`;
         container.querySelector('#tk-kpi').innerHTML = `<div class="ns-kpi-grid ns-mb-3">
             <div class="ns-kpi-card"><div class="ns-kpi-label">Đang làm</div><div class="ns-kpi-value">${t.so_nv}</div></div>
             <div class="ns-kpi-card"><div class="ns-kpi-label">Có tài khoản</div><div class="ns-kpi-value success">${t.co_tk}</div><div class="ns-kpi-sub">${t.so_nv ? formatNumber((t.co_tk / t.so_nv) * 100) : 0}%</div></div>
